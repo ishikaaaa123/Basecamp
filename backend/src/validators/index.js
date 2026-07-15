@@ -4,7 +4,7 @@ import {AvailableUserRole, AvailableTaskStatus} from "../utils/constants.js";
 const userRegValidator = ()=>{
     return  [
         body("email").trim().notEmpty().withMessage("Email is reqd").isEmail().withMessage("Email is invalid!") ,
-        body("username").trim().notEmpty().withMessage("username is reqd").isLowercase().withMessage("username must be in lowercase!!").isLength({min:3}).withMessage("username must be >3 length") ,
+        body("username").trim().notEmpty().withMessage("username is reqd").withMessage("username must be in lowercase!!").isLength({min:3}).withMessage("username must be >3 length") ,
         body("password").trim().notEmpty().withMessage("pwd is reqd") ,
         body("fullName").optional().trim()
     ]

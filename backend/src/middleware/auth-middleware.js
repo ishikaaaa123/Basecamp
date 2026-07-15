@@ -20,6 +20,9 @@ export const verifyJWT = asyncHandler(async(req,res,next) =>{
         if (!user){
             throw new ApiError(401,"Invalid AT");
         }
+        if (!user.isEmailVerified){
+            throw new ApiError(403,"Please verify your email before accessing your account.");
+        }
 
         req.user = user;
         next();

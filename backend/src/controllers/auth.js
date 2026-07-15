@@ -1,11 +1,16 @@
 import { User } from "../models/usermodels.js";
+import { PendingRegistration } from "../models/pending-registration-model.js";
 import { ApiResponse} from "../utils/apiresponse.js";
 import { ApiError} from "../utils/apierror.js";
 import { asyncHandler} from "../utils/async-handler.js";
 import { sendEmail,emailVerifyMailgenContent } from "../utils/mailgen.js";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { forgotPassowrdMailgenContent } from "../utils/mailgen.js";
+
+const getPublicBaseUrl = (req) =>
+    (process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
 
 const generateRefreshandAccessToken = async (userId)=>{
     try {
@@ -21,7 +26,7 @@ const generateRefreshandAccessToken = async (userId)=>{
 }
  
 const registerUser = asyncHandler( async (req,res)=>{
-    const {email,username,password,role} = req.body;
+    const {email,username,password,fullName} = req.body;
     const existedUser = await User.findOne({
         $or:[{username},{email}]
     })
@@ -32,36 +37,33 @@ const registerUser = asyncHandler( async (req,res)=>{
         throw new ApiError(409,"This user already exists");
     }
 
-    const user = await User.create({
-        email,password,username,
-        isEmailVerified:false 
-    }) 
+    const pendingRegistration = await PendingRegistration.findOne({ $or: [{ username }, { email }] });
+    if (pendingRegistration){
+        throw new ApiError(409,"A verification email has already been sent for this account. Please check your inbox.");
+    }
 
-    const {unHashedToken, HashedToken, TokenExpiry} = user.generateTemporaryToken();
+    const unHashedToken = crypto.randomBytes(20).toString("hex");
+    const HashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex");
+    const TokenExpiry = new Date(Date.now() + (20 * 60 * 1000));
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    user.emailVerificationToken = HashedToken;
-    user.emailVerificationExpiry = TokenExpiry;
-    await user.save({validateBeforeSave:false});
+    await PendingRegistration.create({
+        email, username, fullName, password: hashedPassword,
+        emailVerificationToken: HashedToken,
+        emailVerificationExpiry: TokenExpiry,
+    });
 
     await sendEmail({
-        email: user?.email,
+        email,
         subject:"Please verify your email",
-        mailgenContent : emailVerifyMailgenContent(user.username,  `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`),
+        mailgenContent : emailVerifyMailgenContent(username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
     })                                                              //http              localhost                          
-
-    const createdUser =  await User.findById(user._id).select(
-        "-password -refreshToken -emailVerificationToken  -emailVerificationExpiry"
-    )
-
-    if (!createdUser){
-        throw new ApiError(500,"Smth went wrong in registering the user!!");
-    }
 
     return res.status(200)
               .json(
                 new ApiResponse(200,
-                    {user:username},
-                    "User registered successfully and verification email is sent!!"
+                    {email},
+                    "Verification email sent. Verify your email to create your account."
                  )
               )
 });
@@ -75,6 +77,10 @@ const login = asyncHandler(async (req,res)=>{
     const user = await User.findOne({email});
     if (!user){
         throw new ApiError(400, "user doesnt exist");
+    }
+
+    if (!user.isEmailVerified){
+        throw new ApiError(403, "Please verify your email before signing in.");
     }
 
     const pwdvalid  = await user.isPasswordCorrect(password);
@@ -150,20 +156,31 @@ const verifyEmail = asyncHandler(async(req,res)=>{
                                   .update(verificationToken)
                                   .digest("hex");
     
-    const user = await User.findOne({
+    const pendingRegistration = await PendingRegistration.findOne({
         emailVerificationToken: HashedToken,
         emailVerificationExpiry: {$gt:Date.now()}
     })
 
-    if (!user){
+    if (!pendingRegistration){
         throw new ApiError(400,"Email ver token is invalid or expired!!");
     }
 
-    user.isEmailVerified = true;
-    user.emailVerificationToken ="";
-    user.emailVerificationExpiry ="";
+    const existingUser = await User.findOne({
+        $or: [{ email: pendingRegistration.email }, { username: pendingRegistration.username }],
+    });
+    if (existingUser){
+        await PendingRegistration.findByIdAndDelete(pendingRegistration._id);
+        throw new ApiError(409,"An account with these details already exists.");
+    }
 
-    await user.save({validateBeforeSave:false});
+    await User.create({
+        email: pendingRegistration.email,
+        username: pendingRegistration.username,
+        fullName: pendingRegistration.fullName,
+        password: pendingRegistration.password,
+        isEmailVerified: true,
+    });
+    await PendingRegistration.findByIdAndDelete(pendingRegistration._id);
 
     return res.status(200).json(
         new ApiResponse(200,{isEmailVerified:true},"email verified successfully!")
@@ -171,25 +188,24 @@ const verifyEmail = asyncHandler(async(req,res)=>{
 })
 
 const resendEmailVerification = asyncHandler(async(req,res)=>{
-    const user =  await User.findById(req.user?._id);
-    if (!user){
-        throw new ApiError(404,"user not found!");
+    const { email } = req.body;
+    const pendingRegistration = await PendingRegistration.findOne({ email });
+    if (!pendingRegistration){
+        throw new ApiError(404,"No pending verification was found for this email.");
     }
 
-    if (user.isEmailVerified){
-        throw new ApiError(409,"user already verified!");
-    }
+    const unHashedToken = crypto.randomBytes(20).toString("hex");
+    const HashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex");
+    const TokenExpiry = new Date(Date.now() + (20 * 60 * 1000));
 
-    const {unHashedToken, HashedToken, TokenExpiry} = user.generateTemporaryToken();
-
-    user.emailVerificationToken = HashedToken;
-    user.emailVerificationExpiry = TokenExpiry;
-    await user.save({validateBeforeSave:false});
+    pendingRegistration.emailVerificationToken = HashedToken;
+    pendingRegistration.emailVerificationExpiry = TokenExpiry;
+    await pendingRegistration.save({validateBeforeSave:false});
 
     await sendEmail({
-        email: user?.email,
-        subject:"Please verify your email ji",
-        mailgenContent : emailVerifyMailgenContent(user.username,  `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`),
+        email: pendingRegistration.email,
+        subject:"Please verify your email",
+        mailgenContent : emailVerifyMailgenContent(pendingRegistration.username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
     })                                                              //http              localhost                          
 
     return res.status(200).json(
@@ -301,8 +317,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 })
 
 export {resetForgotPassword,changeCurrentPassword,forgotPassword,registerUser, resendEmailVerification,login, logout,currentUser, verifyEmail,refreshAccessToken};
-
-
 
 
 

@@ -63,6 +63,8 @@ const userSchema = new Schema(
 
 userSchema.pre("save", async function(){
     if (!this.isModified("password")) return;
+    // A verified pending registration already holds a bcrypt hash. Do not hash it again.
+    if (/^\$2[aby]\$/.test(this.password)) return;
     this.password = await bcrypt.hash(this.password,10);
 })
 

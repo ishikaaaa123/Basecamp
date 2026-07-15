@@ -21,25 +21,18 @@ const sendEmail = async(options)=>{
     //This creates the HTML version.Most email clients display this HTML version.
 
     const transporter = nodeMailer.createTransport({
-        //A transporter is an object that handles the connection to your 
-        // email service and sends messages on your behalf. 
-        // You create one transporter and reuse it for all your emails.
-        host: process.env.MAILTRAP_SMTP_HOST,
-        port: process.env.MAILTRAP_SMTP_PORT,
+        // Gmail SMTP uses STARTTLS on port 587. Keep all credentials in .env.
+        host: process.env.SMTP_HOST || "smtp.gmail.com",
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: process.env.SMTP_SECURE === "true",
         auth:{
-            user: process.env.MAILTRAP_SMTP_USER,
-            pass: process.env.MAILTRAP_SMTP_PASS
-            //Logs into Mailtrap using your credentials.
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
         }
-        //Connect to sandbox.smtp.mailtrap.io (host)
-        // Enter through port 2525
-        // Log in using user and pass
-        // Submit the email
-        // Mailtrap stores that email in your Mailtrap Inbox
     })
 
     const mail = {//This object contains everything that should be sent.
-        from: "team@example.com", // sender address
+        from: process.env.MAIL_FROM || process.env.SMTP_USER,
         to: options.email,
         subject: options.subject, // subject line
         text: emailTextual, // plain text body
@@ -51,6 +44,7 @@ const sendEmail = async(options)=>{
         return info;
     } catch (error) {
         console.error("error occured!! email service failed",error.message);
+        throw error;
     }
 
     //This line does several things:

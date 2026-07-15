@@ -25,7 +25,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate({ to: "/" });
+      navigate({ to: "/dashboard" });
     } catch (err) {
       setError(getApiError(err));
     } finally {
@@ -40,8 +40,20 @@ function LoginPage() {
         <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to Project Camp.</p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
-          <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
+          <Field
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+          />
+          <Field
+            label="Password"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+          />
 
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -70,10 +82,17 @@ function LoginPage() {
 }
 
 function Field({
-  label, value, onChange, type = "text", autoComplete,
+  label,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
 }: {
-  label: string; value: string; onChange: (v: string) => void;
-  type?: string; autoComplete?: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  autoComplete?: string;
 }) {
   return (
     <div>

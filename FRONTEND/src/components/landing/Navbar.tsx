@@ -1,12 +1,11 @@
-// @ts-nocheck
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEventHandler } from "react";
 import { motion } from "framer-motion";
 import { Menu, ServerCog, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "PRD Scope", href: "#capabilities" },
+  { label: "Features", href: "#capabilities" },
   { label: "Access Control", href: "#access" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -22,7 +21,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navLink = (l, onClick) => (
+  const navLink = (l: (typeof links)[number], onClick?: MouseEventHandler<HTMLAnchorElement>) => (
     <a
       key={l.href}
       href={l.href}
@@ -52,16 +51,22 @@ export function Navbar() {
             <ServerCog className="h-4 w-4 text-white" />
           </div>
           <span className="font-display text-lg font-semibold tracking-tight">
-            Project Camp <span className="text-gradient"></span>
+            Project Basecamp <span className="text-gradient"></span>
           </span>
         </a>
 
         <div className="hidden items-center gap-1 md:flex">
           {links.map((l) => navLink(l))}
-          <Link to="/login" className="ml-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link
+            to="/login"
+            className="ml-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
             Log in
           </Link>
-          <Link to="/register" className={cn(signupClass, "transition-transform hover:scale-[1.03]")}>
+          <Link
+            to="/register"
+            className={cn(signupClass, "transition-transform hover:scale-[1.03]")}
+          >
             Sign up
           </Link>
         </div>
@@ -83,7 +88,7 @@ export function Navbar() {
         >
           <div className="flex flex-col gap-1 p-4">
             {links.map((l) => navLink(l, () => setOpen(false)))}
-            <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-3">
+            <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
               <Link
                 to="/login"
                 onClick={() => setOpen(false)}
@@ -91,7 +96,11 @@ export function Navbar() {
               >
                 Log in
               </Link>
-              <Link to="/register" onClick={() => setOpen(false)} className={cn(signupClass, "text-center")}>
+              <Link
+                to="/register"
+                onClick={() => setOpen(false)}
+                className={cn(signupClass, "text-center")}
+              >
                 Sign up
               </Link>
             </div>

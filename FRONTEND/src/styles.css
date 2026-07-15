@@ -1,6 +1,6 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -47,7 +47,8 @@
 
 :root {
   --radius: 1.1rem;
-  /* Vibrant dark cosmos */
+  /* Dark-only application surface. */
+  color-scheme: dark;
   --background: oklch(0.13 0.03 280);
   --foreground: oklch(0.98 0.005 250);
   --card: oklch(0.18 0.035 280);
@@ -68,11 +69,11 @@
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.72 0.22 310);
 
-  --brand: oklch(0.72 0.24 310);        /* magenta-violet */
-  --brand-2: oklch(0.7 0.22 250);       /* electric blue */
-  --cyan: oklch(0.85 0.16 195);         /* neon cyan */
-  --amber: oklch(0.82 0.17 75);         /* warm amber */
-  --pink: oklch(0.78 0.2 350);          /* hot pink */
+  --brand: oklch(0.72 0.24 310); /* magenta-violet */
+  --brand-2: oklch(0.7 0.22 250); /* electric blue */
+  --cyan: oklch(0.85 0.16 195); /* neon cyan */
+  --amber: oklch(0.82 0.17 75); /* warm amber */
+  --pink: oklch(0.78 0.2 350); /* hot pink */
 
   --chart-1: oklch(0.72 0.24 310);
   --chart-2: oklch(0.75 0.18 195);
@@ -80,15 +81,24 @@
   --chart-4: oklch(0.82 0.17 75);
   --chart-5: oklch(0.78 0.2 350);
 
-  --gradient-brand: linear-gradient(120deg, oklch(0.72 0.24 310), oklch(0.7 0.22 250) 55%, oklch(0.85 0.16 195));
+  --gradient-brand: linear-gradient(
+    120deg,
+    oklch(0.72 0.24 310),
+    oklch(0.7 0.22 250) 55%,
+    oklch(0.85 0.16 195)
+  );
   --gradient-warm: linear-gradient(120deg, oklch(0.78 0.2 350), oklch(0.82 0.17 75));
   --shadow-glow: 0 20px 60px -20px color-mix(in oklab, var(--brand) 55%, transparent);
   --shadow-glow-cyan: 0 20px 60px -20px color-mix(in oklab, var(--cyan) 55%, transparent);
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -96,12 +106,27 @@
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     background-image:
-      radial-gradient(ellipse 1000px 600px at 15% -10%, color-mix(in oklab, var(--brand) 22%, transparent), transparent 60%),
-      radial-gradient(ellipse 900px 600px at 90% 10%, color-mix(in oklab, var(--brand-2) 18%, transparent), transparent 60%),
-      radial-gradient(ellipse 800px 500px at 50% 110%, color-mix(in oklab, var(--cyan) 15%, transparent), transparent 60%);
+      radial-gradient(
+        ellipse 1000px 600px at 15% -10%,
+        color-mix(in oklab, var(--brand) 22%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 900px 600px at 90% 10%,
+        color-mix(in oklab, var(--brand-2) 18%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 800px 500px at 50% 110%,
+        color-mix(in oklab, var(--cyan) 15%, transparent),
+        transparent 60%
+      );
     background-attachment: fixed;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.03em;
     font-weight: 600;
@@ -126,12 +151,17 @@
 
 @utility card-vibrant {
   position: relative;
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     color-mix(in oklab, var(--card) 80%, transparent),
-    color-mix(in oklab, var(--card) 40%, transparent));
+    color-mix(in oklab, var(--card) 40%, transparent)
+  );
   backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid color-mix(in oklab, white 8%, transparent);
-  transition: border-color .3s, transform .3s, box-shadow .3s;
+  transition:
+    border-color 0.3s,
+    transform 0.3s,
+    box-shadow 0.3s;
   &:hover {
     border-color: color-mix(in oklab, var(--brand) 60%, transparent);
     box-shadow: var(--shadow-glow);
@@ -139,8 +169,13 @@
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 @utility animate-gradient {
   background-size: 200% 200%;
@@ -148,8 +183,16 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 0.75; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
 }
-@utility animate-pulse-glow { animation: pulse-glow 5s ease-in-out infinite; }
-
+@utility animate-pulse-glow {
+  animation: pulse-glow 5s ease-in-out infinite;
+}
