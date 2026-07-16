@@ -5,8 +5,8 @@ const sendEmail = async(options)=>{
     const mailGenerator = new Mailgen({
         theme: "default",//This tells Mailgen to use its default email design.
         product:{//This defines information about your application.
-            name:"task manager",
-            link:"https://taskmanagerlink.com"
+            name:"PROJECT BASECAMP",
+            link:"https://projectBasecamp.com"
         }
          //The generated email may automatically include:
         // Task Manager:
@@ -25,6 +25,10 @@ const sendEmail = async(options)=>{
         host: process.env.SMTP_HOST || "smtp.gmail.com",
         port: Number(process.env.SMTP_PORT || 587),
         secure: process.env.SMTP_SECURE === "true",
+        // Fail before the frontend request timeout when SMTP is unreachable.
+        connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 8000),
+        greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 8000),
+        socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 10000),
         auth:{
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
@@ -68,11 +72,11 @@ const sendEmail = async(options)=>{
         return {
             body: {
                 name: username,
-                intro: "Hello ji! Welcome to Project Camp ji",
+                intro: "Welcome to Project Camp",
                 action: {
                     instructions: "To verify your email, click the button below:",
                     button: {
-                        color: "#00FF00",
+                        color: "#2563EB",
                         text: "Verify Email",
                         link: verificationURL
                     }
@@ -89,7 +93,7 @@ const forgotPassowrdMailgenContent = (username,verificationURl)=>{
             action:{
                 instructions:"To change ur password,click on link below:",
                 button:{
-                    color:"#00FF00",
+                    color:"#00008B",
                     text: "Reset Password",
                     link: verificationURl
                 }

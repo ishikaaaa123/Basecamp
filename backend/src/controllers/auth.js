@@ -47,17 +47,23 @@ const registerUser = asyncHandler( async (req,res)=>{
     const TokenExpiry = new Date(Date.now() + (20 * 60 * 1000));
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await PendingRegistration.create({
+    const createdPendingRegistration = await PendingRegistration.create({
         email, username, fullName, password: hashedPassword,
         emailVerificationToken: HashedToken,
         emailVerificationExpiry: TokenExpiry,
     });
 
-    await sendEmail({
-        email,
-        subject:"Please verify your email",
-        mailgenContent : emailVerifyMailgenContent(username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
-    })                                                              //http              localhost                          
+    try {
+        await sendEmail({
+            email,
+            subject:"Please verify your email",
+            mailgenContent : emailVerifyMailgenContent(username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
+        });
+    } catch (error) {
+        // Do not leave a signup blocked when the mail provider rejects the message.
+        await PendingRegistration.findByIdAndDelete(createdPendingRegistration._id);
+        throw new ApiError(502, "We could not send the verification email. Please try again shortly.");
+    }
 
     return res.status(200)
               .json(
@@ -198,15 +204,19 @@ const resendEmailVerification = asyncHandler(async(req,res)=>{
     const HashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex");
     const TokenExpiry = new Date(Date.now() + (20 * 60 * 1000));
 
+    try {
+        await sendEmail({
+            email: pendingRegistration.email,
+            subject:"Please verify your email",
+            mailgenContent : emailVerifyMailgenContent(pendingRegistration.username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
+        });
+    } catch (error) {
+        throw new ApiError(502, "We could not resend the verification email. Please try again shortly.");
+    }
+
     pendingRegistration.emailVerificationToken = HashedToken;
     pendingRegistration.emailVerificationExpiry = TokenExpiry;
     await pendingRegistration.save({validateBeforeSave:false});
-
-    await sendEmail({
-        email: pendingRegistration.email,
-        subject:"Please verify your email",
-        mailgenContent : emailVerifyMailgenContent(pendingRegistration.username,  `${getPublicBaseUrl(req)}/api/v1/auth/verify-email/${unHashedToken}`),
-    })                                                              //http              localhost                          
 
     return res.status(200).json(
         new ApiResponse(200,{},"Email resend done")
@@ -317,8 +327,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 })
 
 export {resetForgotPassword,changeCurrentPassword,forgotPassword,registerUser, resendEmailVerification,login, logout,currentUser, verifyEmail,refreshAccessToken};
-
-
 
 
 
