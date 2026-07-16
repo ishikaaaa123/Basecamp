@@ -33,10 +33,12 @@ const getProjectNotes = asyncHandler(async(req,res)=>{
         },
         {
             $project:{
+                _id:1,
                 project:1,
                 createdBy:1,
                 content:1,
-                _id:0
+                createdAt:1,
+                updatedAt:1
             }
         }
     ])

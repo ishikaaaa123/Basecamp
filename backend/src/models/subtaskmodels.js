@@ -14,7 +14,7 @@ const subTaskSchema = new Schema({
     },
     isCompleted:{
         type:Boolean,
-        required:true
+        default:false
     },
     assignedBy:{
         type: Schema.Types.ObjectId,
@@ -27,7 +27,7 @@ const subTaskSchema = new Schema({
         required:true
     },
    
-    attatchment:{
+    attachments:{
         type:[
             {
                 url:String,

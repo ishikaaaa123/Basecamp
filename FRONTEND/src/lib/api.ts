@@ -22,6 +22,7 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (config.data instanceof FormData) config.headers.delete("Content-Type");
   return config;
 });
 
@@ -89,6 +90,7 @@ export interface Project {
   members?: number;
   createdAt?: string;
   updatedAt?: string;
+  role?: ProjectRole;
 }
 
 export interface Task {
@@ -97,9 +99,17 @@ export interface Task {
   description?: string;
   status: "todo" | "in_progress" | "done";
   project: string;
-  assignedTo?: { username?: string; email?: string } | string;
-  attachments?: { url: string; mimetype: string; size: number }[];
+  assignedTo?: { _id?: string; username?: string; email?: string } | string;
+  attachments?: { url: string; mimeType?: string; size: number }[];
   createdAt?: string;
+}
+
+export interface Subtask {
+  _id: string;
+  title: string;
+  isCompleted: boolean;
+  assignedTo?: { _id?: string; username?: string; email?: string } | string;
+  attachments?: { url: string; mimeType?: string; size: number }[];
 }
 
 export interface ProjectNote {
@@ -117,7 +127,10 @@ function unwrap<T>(payload: unknown): T {
 
 export async function listProjects(): Promise<Project[]> {
   const { data } = await api.get("/projects");
-  return unwrap<Project[]>(data);
+  const projects = unwrap<Array<Project | { projects: Project; role?: ProjectRole }>>(data);
+  return projects.map((entry) =>
+    "projects" in entry ? { ...entry.projects, role: entry.role } : entry,
+  );
 }
 
 export async function createProject(input: {
@@ -133,7 +146,123 @@ export async function listProjectTasks(projectId: string): Promise<Task[]> {
   return unwrap<Task[]>(data);
 }
 
+export async function createTask(projectId: string, form: FormData): Promise<Task> {
+  const { data } = await api.post(`/tasks/${projectId}`, form);
+  return unwrap<Task>(data);
+}
+
+export async function createSubtask(
+  projectId: string,
+  taskId: string,
+  form: FormData,
+): Promise<unknown> {
+  const { data } = await api.post(`/tasks/${projectId}/t/${taskId}/subtasks`, form);
+  return unwrap<unknown>(data);
+}
+
+export async function getTaskById(
+  projectId: string,
+  taskId: string,
+): Promise<Task & { subtasks: Subtask[] }> {
+  const { data } = await api.get(`/tasks/${projectId}/t/${taskId}`);
+  return unwrap<Task & { subtasks: Subtask[] }>(data);
+}
+
+export async function updateTaskStatus(projectId: string, taskId: string, status: Task["status"]) {
+  await api.put(`/tasks/${projectId}/t/${taskId}`, { status });
+}
+
+export async function updateTask(
+  projectId: string,
+  taskId: string,
+  input: Pick<Task, "title" | "description" | "status"> & { assignedTo?: string },
+) {
+  await api.put(`/tasks/${projectId}/t/${taskId}`, input);
+}
+
+export async function updateSubtask(
+  projectId: string,
+  taskId: string,
+  subtaskId: string,
+  input: { title?: string; assignedTo?: string; isCompleted?: boolean },
+) {
+  await api.put(`/tasks/${projectId}/t/${taskId}/subtasks/${subtaskId}`, input);
+}
+
+export async function deleteTask(projectId: string, taskId: string) {
+  await api.delete(`/tasks/${projectId}/t/${taskId}`);
+}
+
+export async function deleteSubtask(projectId: string, taskId: string, subtaskId: string) {
+  await api.delete(`/tasks/${projectId}/t/${taskId}/subtasks/${subtaskId}`);
+}
+
 export async function listProjectNotes(projectId: string): Promise<ProjectNote[]> {
   const { data } = await api.get(`/notes/${projectId}`);
   return unwrap<ProjectNote[]>(data);
+}
+
+export async function createProjectNote(projectId: string, content: string): Promise<ProjectNote> {
+  const { data } = await api.post(`/notes/${projectId}`, { content });
+  return unwrap<ProjectNote>(data);
+}
+
+// ---- Project members / role management ----
+
+export type ProjectRole = "admin" | "project_admin" | "member";
+
+export interface ProjectMember {
+  project: string;
+  role: ProjectRole;
+  createdAt?: string;
+  userInfo: {
+    _id: string;
+    username?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: { url?: string } | string;
+  };
+}
+
+export async function getProjectById(projectId: string): Promise<Project> {
+  const { data } = await api.get(`/projects/${projectId}`);
+  return unwrap<Project>(data);
+}
+
+export async function updateProject(
+  projectId: string,
+  input: { name: string; description?: string },
+): Promise<Project> {
+  const { data } = await api.put(`/projects/${projectId}`, input);
+  return unwrap<Project>(data);
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+  await api.delete(`/projects/${projectId}`);
+}
+
+export async function listProjectMembers(projectId: string): Promise<ProjectMember[]> {
+  const { data } = await api.get(`/projects/${projectId}/members`);
+  return unwrap<ProjectMember[]>(data);
+}
+
+export async function addProjectMember(
+  projectId: string,
+  input: { email: string; role: ProjectRole },
+): Promise<unknown> {
+  const { data } = await api.post(`/projects/${projectId}/members`, input);
+  return unwrap<unknown>(data);
+}
+
+export async function updateProjectMemberRole(
+  projectId: string,
+  userId: string,
+  role: ProjectRole,
+): Promise<unknown> {
+  const { data } = await api.put(`/projects/${projectId}/members/${userId}`, { role });
+  return unwrap<unknown>(data);
+}
+
+export async function removeProjectMember(projectId: string, userId: string): Promise<void> {
+  await api.delete(`/projects/${projectId}/members/${userId}`);
 }

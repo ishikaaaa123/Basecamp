@@ -96,8 +96,12 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={autoComplete} className="block text-sm font-medium text-foreground">
+        {label}
+      </label>
       <input
+        id={autoComplete}
+        name={autoComplete}
         type={type}
         autoComplete={autoComplete}
         required

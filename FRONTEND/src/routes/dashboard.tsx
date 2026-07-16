@@ -1,32 +1,28 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   FolderKanban,
   ClipboardList,
-  FileText,
   Users,
   LogOut,
   Plus,
   ServerCog,
   Sparkles,
-  CheckCircle2,
-  Circle,
   Loader2,
   ArrowRight,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   isAuthenticated,
   logout,
   getCurrentUser,
   listProjects,
   createProject,
-  listProjectTasks,
-  listProjectNotes,
   getApiError,
   type Project,
-  type Task,
 } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard")({
@@ -44,13 +40,11 @@ function DashboardPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
 
-  // Confirm the token with the backend so stale or unverified sessions never render the dashboard.
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate({ to: "/login" });
       return;
     }
-
     let active = true;
     void getCurrentUser()
       .then(() => {
@@ -60,7 +54,6 @@ function DashboardPage() {
         await logout();
         if (active) navigate({ to: "/login" });
       });
-
     return () => {
       active = false;
     };
@@ -73,23 +66,15 @@ function DashboardPage() {
       </div>
     );
   }
-
   return <DashboardShell />;
 }
 
 function DashboardShell() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const userQ = useQuery({ queryKey: ["me"], queryFn: getCurrentUser, retry: false });
   const projectsQ = useQuery({ queryKey: ["projects"], queryFn: listProjects, retry: false });
-
-  useEffect(() => {
-    if (projectsQ.data && projectsQ.data.length > 0 && !selectedId) {
-      setSelectedId(projectsQ.data[0]._id);
-    }
-  }, [projectsQ.data, selectedId]);
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -99,25 +84,19 @@ function DashboardShell() {
   }
 
   const projects = projectsQ.data ?? [];
-  const selected = projects.find((p) => p._id === selectedId) ?? null;
   const user = userQ.data as { username?: string; email?: string; fullName?: string } | undefined;
 
   return (
     <div className="min-h-screen">
       <DashboardNav user={user} onSignOut={handleSignOut} />
-
       <main className="mx-auto max-w-7xl px-6 pt-24 pb-16">
         <WelcomeHeader user={user} projects={projects} />
-
-        <div className="mt-10 grid gap-6 lg:grid-cols-[320px_1fr]">
-          <ProjectsColumn
+        <div className="mt-10">
+          <ProjectsSection
             projects={projects}
             loading={projectsQ.isLoading}
             error={projectsQ.error ? getApiError(projectsQ.error) : null}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
           />
-          <ProjectDetail project={selected} />
         </div>
       </main>
     </div>
@@ -241,21 +220,121 @@ function StatsBar({ total }: { total: number }) {
   );
 }
 
-function ProjectsColumn({
+function ProjectsSection({
   projects,
   loading,
   error,
-  selectedId,
-  onSelect,
 }: {
   projects: Project[];
   loading: boolean;
   error: string | null;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
 }) {
-  const qc = useQueryClient();
   const [creating, setCreating] = useState(false);
+
+  return (
+    <section className="card-vibrant rounded-2xl p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <FolderKanban className="h-4 w-4 text-[var(--brand)]" />
+          <h2 className="font-display text-lg font-semibold">Your projects</h2>
+        </div>
+        <button
+          onClick={() => setCreating(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-[var(--brand)]/30 transition-transform hover:scale-[1.03]"
+        >
+          <Plus className="h-4 w-4" />
+          New Project
+        </button>
+      </div>
+
+      <div className="mt-6">
+        {loading && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-xl border border-border bg-muted/40"
+              />
+            ))}
+          </div>
+        )}
+        {error && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+        {!loading && !error && projects.length === 0 && (
+          <div className="grid place-items-center rounded-xl border border-dashed border-border py-16 text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--cyan)] shadow-lg">
+              <FolderKanban className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="mt-5 font-display text-xl font-semibold">No projects yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create your first project to start collaborating.
+            </p>
+            <button
+              onClick={() => setCreating(true)}
+              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] px-3 py-1.5 text-sm font-semibold text-white shadow-lg shadow-[var(--brand)]/30"
+            >
+              <Plus className="h-4 w-4" />
+              New Project
+            </button>
+          </div>
+        )}
+        {!loading && !error && projects.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((p) => (
+              <ProjectCard key={p._id} project={p} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {creating && <CreateProjectModal onClose={() => setCreating(false)} />}
+    </section>
+  );
+}
+
+function ProjectCard({ project }: { project: Project & { role?: string } }) {
+  const role = (project as unknown as { role?: string }).role;
+  return (
+    <Link
+      to="/projects/$projectId"
+      params={{ projectId: project._id }}
+      className="group flex flex-col justify-between gap-3 rounded-xl border border-border bg-muted/30 p-4 transition-all hover:border-[var(--brand)]/40 hover:bg-muted/60"
+    >
+      <div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-base font-semibold">{project.name}</div>
+            {project.description && (
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                {project.description}
+              </p>
+            )}
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <Users className="h-3 w-3" />
+          {typeof project.members === "number" ? project.members : "—"} member
+          {project.members === 1 ? "" : "s"}
+        </span>
+        {role && (
+          <span className="rounded-full border border-border px-2 py-0.5 uppercase tracking-widest">
+            {role.replace("_", " ")}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function CreateProjectModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -264,316 +343,103 @@ function ProjectsColumn({
     mutationFn: createProject,
     onSuccess: (p) => {
       qc.invalidateQueries({ queryKey: ["projects"] });
-      setName("");
-      setDescription("");
-      setCreating(false);
-      if (p?._id) onSelect(p._id);
+      toast.success("Project created");
+      onClose();
+      if (p?._id) navigate({ to: "/projects/$projectId", params: { projectId: p._id } });
     },
-    onError: (e) => setFormError(getApiError(e)),
+    onError: (e) => {
+      const msg = getApiError(e);
+      setFormError(msg);
+      toast.error(msg);
+    },
   });
 
-  function onCreate(e: FormEvent) {
+  function onSubmit(e: FormEvent) {
     e.preventDefault();
     setFormError(null);
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setFormError("Project name is required");
+      return;
+    }
     createMut.mutate({ name: name.trim(), description: description.trim() || undefined });
   }
 
   return (
-    <aside className="card-vibrant rounded-2xl p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FolderKanban className="h-4 w-4 text-[var(--brand)]" />
-          <h2 className="font-display text-base font-semibold">Projects</h2>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        onClick={(e: ReactMouseEvent) => e.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-display text-xl font-semibold">New project</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Give your project a name and short description.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          onClick={() => setCreating((v) => !v)}
-          className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] px-2.5 py-1 text-xs font-semibold text-white shadow-lg shadow-[var(--brand)]/30 transition-transform hover:scale-[1.04]"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          New
-        </button>
-      </div>
 
-      {creating && (
-        <motion.form
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          onSubmit={onCreate}
-          className="mt-4 space-y-2 overflow-hidden"
-        >
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Project name"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)"
-            rows={2}
-            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium">Project name</label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Marketing website redesign"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="What is this project about?"
+              className="mt-1 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
           {formError && (
-            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5 text-xs text-destructive">
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {formError}
             </div>
           )}
-          <button
-            type="submit"
-            disabled={createMut.isPending || !name.trim()}
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-          >
-            {createMut.isPending ? "Creating…" : "Create project"}
-          </button>
-        </motion.form>
-      )}
-
-      <div className="mt-4 space-y-1.5">
-        {loading && (
-          <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading projects…
-          </div>
-        )}
-        {error && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {error}
-          </div>
-        )}
-        {!loading && !error && projects.length === 0 && (
-          <p className="py-6 text-center text-xs text-muted-foreground">No projects yet.</p>
-        )}
-        {projects.map((p) => {
-          const active = p._id === selectedId;
-          return (
+          <div className="flex justify-end gap-2 pt-2">
             <button
-              key={p._id}
-              onClick={() => onSelect(p._id)}
-              className={`group flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition-all ${
-                active
-                  ? "border-[var(--brand)]/50 bg-[var(--brand)]/10"
-                  : "border-border hover:border-[var(--brand)]/30 hover:bg-muted/70"
-              }`}
+              type="button"
+              onClick={onClose}
+              disabled={createMut.isPending}
+              className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-accent disabled:opacity-60"
             >
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{p.name}</div>
-                {p.description && (
-                  <div className="truncate text-[11px] text-muted-foreground">{p.description}</div>
-                )}
-              </div>
-              <ArrowRight
-                className={`h-3.5 w-3.5 shrink-0 transition-transform ${
-                  active
-                    ? "translate-x-0 text-[var(--brand)]"
-                    : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
-                }`}
-              />
+              Cancel
             </button>
-          );
-        })}
-      </div>
-    </aside>
-  );
-}
-
-function ProjectDetail({ project }: { project: Project | null }) {
-  if (!project) {
-    return (
-      <div className="card-vibrant grid min-h-[420px] place-items-center rounded-2xl p-10 text-center">
-        <div>
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--cyan)] shadow-lg">
-            <FolderKanban className="h-6 w-6 text-white" />
-          </div>
-          <h3 className="mt-5 font-display text-xl font-semibold">Select a project</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Pick a project from the list to see its tasks and notes.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <motion.div
-      key={project._id}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-6"
-    >
-      <div className="card-vibrant rounded-2xl p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="font-display text-2xl font-semibold tracking-tight">{project.name}</h2>
-            {project.description && (
-              <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-                {project.description}
-              </p>
-            )}
-          </div>
-          {typeof project.members === "number" && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/70 px-3 py-1 text-xs text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              {project.members} member{project.members === 1 ? "" : "s"}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <TasksPanel projectId={project._id} />
-        <NotesPanel projectId={project._id} />
-      </div>
-    </motion.div>
-  );
-}
-
-const STATUS_META: Record<
-  Task["status"],
-  { label: string; tint: string; icon: typeof CheckCircle2 }
-> = {
-  todo: { label: "Todo", tint: "from-[var(--brand-2)] to-[var(--cyan)]", icon: Circle },
-  in_progress: {
-    label: "In progress",
-    tint: "from-[var(--amber)] to-[var(--pink)]",
-    icon: Loader2,
-  },
-  done: { label: "Done", tint: "from-[var(--cyan)] to-[var(--brand)]", icon: CheckCircle2 },
-};
-
-function TasksPanel({ projectId }: { projectId: string }) {
-  const q = useQuery({
-    queryKey: ["tasks", projectId],
-    queryFn: () => listProjectTasks(projectId),
-    retry: false,
-  });
-
-  const tasks = q.data ?? [];
-  const counts = tasks.reduce(
-    (acc, t) => {
-      acc[t.status] = (acc[t.status] ?? 0) + 1;
-      return acc;
-    },
-    { todo: 0, in_progress: 0, done: 0 } as Record<Task["status"], number>,
-  );
-
-  return (
-    <div className="card-vibrant rounded-2xl p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-[var(--brand-2)]" />
-          <h3 className="font-display text-base font-semibold">Tasks</h3>
-        </div>
-        <div className="flex gap-1.5 text-[11px] text-muted-foreground">
-          <span className="rounded-full border border-border px-2 py-0.5">To do {counts.todo}</span>
-          <span className="rounded-full border border-border px-2 py-0.5">
-            In progress {counts.in_progress}
-          </span>
-          <span className="rounded-full border border-border px-2 py-0.5">Done {counts.done}</span>
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {q.isLoading && (
-          <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading tasks…
-          </div>
-        )}
-        {q.error && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {getApiError(q.error)}
-          </div>
-        )}
-        {!q.isLoading && !q.error && tasks.length === 0 && (
-          <p className="py-6 text-center text-xs text-muted-foreground">
-            No tasks in this project.
-          </p>
-        )}
-        {tasks.map((t) => {
-          const meta = STATUS_META[t.status] ?? STATUS_META.todo;
-          const Icon = meta.icon;
-          return (
-            <div
-              key={t._id}
-              className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2.5 transition-colors hover:border-[var(--brand)]/30"
+            <button
+              type="submit"
+              disabled={createMut.isPending || !name.trim()}
+              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[var(--brand)]/30 disabled:opacity-60"
             >
-              <div
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${meta.tint} shadow`}
-              >
-                <Icon
-                  className={`h-4 w-4 text-white ${t.status === "in_progress" ? "animate-spin" : ""}`}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="truncate text-sm font-medium">{t.title}</div>
-                  <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {meta.label}
-                  </span>
-                </div>
-                {t.description && (
-                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                    {t.description}
-                  </p>
-                )}
-                {t.attachments && t.attachments.length > 0 && (
-                  <div className="mt-1 text-[11px] text-muted-foreground">
-                    {t.attachments.length} attachment{t.attachments.length === 1 ? "" : "s"}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function NotesPanel({ projectId }: { projectId: string }) {
-  const q = useQuery({
-    queryKey: ["notes", projectId],
-    queryFn: () => listProjectNotes(projectId),
-    retry: false,
-  });
-  const notes = q.data ?? [];
-
-  return (
-    <div className="card-vibrant rounded-2xl p-6">
-      <div className="flex items-center gap-2">
-        <FileText className="h-4 w-4 text-[var(--amber)]" />
-        <h3 className="font-display text-base font-semibold">Notes</h3>
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {q.isLoading && (
-          <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading notes…
+              {createMut.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {createMut.isPending ? "Creating…" : "Create Project"}
+            </button>
           </div>
-        )}
-        {q.error && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            {getApiError(q.error)}
-          </div>
-        )}
-        {!q.isLoading && !q.error && notes.length === 0 && (
-          <p className="py-6 text-center text-xs text-muted-foreground">No notes yet.</p>
-        )}
-        {notes.map((n) => (
-          <div
-            key={n._id}
-            className="rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm transition-colors hover:border-[var(--brand)]/30"
-          >
-            <p className="whitespace-pre-line text-foreground/90">{n.content}</p>
-            {n.createdAt && (
-              <div className="mt-1.5 text-[11px] text-muted-foreground">
-                {new Date(n.createdAt).toLocaleString()}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+        </form>
+      </motion.div>
     </div>
   );
 }

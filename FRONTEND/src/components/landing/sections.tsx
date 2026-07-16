@@ -217,7 +217,9 @@ export function Hero() {
         </Reveal>
         <Reveal delay={0.15}>
           <p className="mx-auto mt-8 max-w-2xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-          A modern full-stack project management platform built for teams to collaborate seamlessly. Organize projects, assign tasks, manage members, share files, and track progress - all in one secure workspace.
+            A modern full-stack project management platform built for teams to collaborate
+            seamlessly. Organize projects, assign tasks, manage members, share files, and track
+            progress - all in one secure workspace.
           </p>
         </Reveal>
         <Reveal delay={0.25}>
@@ -377,9 +379,7 @@ export function Footer() {
     <footer className="relative mt-16 border-t border-border">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--brand)]/50 to-transparent" />
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-10 text-sm text-muted-foreground sm:flex-row">
-        <div className="font-display text-base font-semibold text-gradient">
-          Project Basecamp
-        </div>
+        <div className="font-display text-base font-semibold text-gradient">Project Basecamp</div>
         <div className="flex items-center gap-2">
           {/* <CheckCircle2 className="h-4 w-4 text-[var(--cyan)]" /> */}
           <span>© Built with ❤️ by Ishika</span>

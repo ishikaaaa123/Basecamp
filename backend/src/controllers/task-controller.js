@@ -5,6 +5,10 @@ import { asyncHandler} from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { Tasks } from "../models/taskmodels.js";
 import { subTask } from "../models/subtaskmodels.js";
+import { ProjectMember } from "../models/project-members-models.js";
+
+const getPublicBaseUrl = (req) =>
+    (process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
 
 const createTask = asyncHandler(async(req,res) =>{
     const {title,description,assignedTo,status} = req.body;
@@ -15,17 +19,22 @@ const createTask = asyncHandler(async(req,res) =>{
         throw new ApiError(404,"project not found!!");
     }
 
+    const assignee = await ProjectMember.findOne({ project: projectId, user: assignedTo });
+    if (!assignee){
+        throw new ApiError(422,"Task assignee must be a project member.");
+    }
+
     const files = req.files || [];
-    const attatchment =  files.map((file) =>{
+    const attachments = files.map((file) =>{
         return {
-            url : `${process.env.SERVER_URL}/images/${file.filename}`,
+            url : `${getPublicBaseUrl(req)}/images/${file.filename}`,
             mimeType: file.mimetype,
             size: file.size
         }
     })
 
     const task = await Tasks.create({
-        title,description,status,attatchment,
+        title,description,status,attachments,
         assignedTo: assignedTo 
                     ? new mongoose.Types.ObjectId(assignedTo)
                     : undefined,
@@ -54,6 +63,13 @@ const updateTask = asyncHandler(async(req,res) =>{
 
     if (!task){
         throw new ApiError(404,"task not found!!");
+    }
+
+    if (assignedTo) {
+        const assignee = await ProjectMember.findOne({ project: projectId, user: assignedTo });
+        if (!assignee){
+            throw new ApiError(422,"Task assignee must be a project member.");
+        }
     }
 
     const updatedTask = await Tasks.findByIdAndUpdate(taskId,
@@ -134,18 +150,17 @@ const getTaskDetails = asyncHandler(async(req,res) =>{
         {
             $project:
                 {
+                    _id:1,
                     title:1,
                     description:1,
                     status:1,
                     assignedTo:1,
-                    attatchment:1
+                    attachments:1,
+                    createdAt:1,
+                    updatedAt:1
                 }
         }
     ])
-
-    if (!tasks.length){
-        throw new ApiError(404,"no task found")
-    }
 
     return res
     .status(200)
@@ -215,10 +230,11 @@ const getTaskById = asyncHandler(async(req,res) =>{
                     },
                     {
                         $project:{
+                            _id:1,
                             title:1,
                             isCompleted:1,
                             assignedTo:1,
-                            attatchment:1,
+                            attachments:1,
                             createdAt:1,
                             updatedAt:1
                         }
@@ -233,7 +249,7 @@ const getTaskById = asyncHandler(async(req,res) =>{
                 description:1,
                 status:1,
                 assignedTo:1,
-                attatchment:1,
+                attachments:1,
                 subtasks:1
             }
         }
@@ -251,9 +267,9 @@ const createSubTask = asyncHandler(async(req,res)=>{
     const {title,assignedTo, isCompleted} = req.body;
     const files = req.files || [];
 
-    const attatchment =  files.map((file) =>{
+    const attachments = files.map((file) =>{
         return {
-            url : `${process.env.SERVER_URL}/images/${file.filename}`,
+            url : `${getPublicBaseUrl(req)}/images/${file.filename}`,
             mimeType: file.mimetype,
             size: file.size
         }
@@ -272,6 +288,11 @@ const createSubTask = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"task not found!!");
     }
 
+    const assignee = await ProjectMember.findOne({ project: projectId, user: assignedTo });
+    if (!assignee){
+        throw new ApiError(422,"Subtask assignee must be a project member.");
+    }
+
     const subtask =  await subTask.create({
         title, isCompleted,
         assignedBy: new mongoose.Types.ObjectId(req.user._id),
@@ -279,7 +300,7 @@ const createSubTask = asyncHandler(async(req,res)=>{
                     ? new mongoose.Types.ObjectId(assignedTo)
                     :undefined,
         task :  new mongoose.Types.ObjectId(taskId),
-        attatchment
+        attachments
     })
 
     return res.status(200).json(

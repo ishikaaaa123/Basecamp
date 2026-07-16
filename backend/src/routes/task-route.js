@@ -13,22 +13,22 @@ router.use(verifyJWT);
 
 router.route("/:projectId")
       .get(validateProjectPerms(AvailableUserRole),getTaskDetails)
-      .post(validateProjectPerms([UserRolesEnum.ADMIN, UserRolesEnum.PROJECT_ADMIN]) ,
+      .post(validateProjectPerms(AvailableUserRole),
       upload.array("attachments",5),
       createTaskValidator(),validate,createTask);
 
 router.route("/:projectId/t/:taskId")
       .get(validateProjectPerms(AvailableUserRole), getTaskById)
-      .put(validateProjectPerms([UserRolesEnum.ADMIN, UserRolesEnum.PROJECT_ADMIN]), updateTaskValidator(),validate,updateTask)
-      .delete(validateProjectPerms([UserRolesEnum.ADMIN, UserRolesEnum.PROJECT_ADMIN]), deleteTask);
+      .put(validateProjectPerms(AvailableUserRole), updateTaskValidator(),validate,updateTask)
+      .delete(validateProjectPerms(AvailableUserRole), deleteTask);
 
 router.route("/:projectId/t/:taskId/subtasks")
-      .post(validateProjectPerms([UserRolesEnum.ADMIN, UserRolesEnum.PROJECT_ADMIN]),
+      .post(validateProjectPerms(AvailableUserRole),
       upload.array("attachments",5),
       createSubTaskValidator(),validate,createSubTask)
 
 router.route("/:projectId/t/:taskId/subtasks/:subTaskId")
       .put(validateProjectPerms(AvailableUserRole), updateSubTaskValidator(),validate,updateSubTask)
-      .delete(validateProjectPerms([UserRolesEnum.ADMIN, UserRolesEnum.PROJECT_ADMIN]), deleteSubTask)
+      .delete(validateProjectPerms(AvailableUserRole), deleteSubTask)
 
 export default router;

@@ -12,11 +12,11 @@ router.use(verifyJWT);
 
 router.route("/:projectId")
       .get(validateProjectPerms(AvailableUserRole),getProjectNotes)
-      .post(validateProjectPerms([UserRolesEnum.ADMIN]) , createNoteValidator(), validate, createProjectNotes);
+      .post(validateProjectPerms(AvailableUserRole), createNoteValidator(), validate, createProjectNotes);
 
 router.route("/:projectId/n/:noteId")
       .get(validateProjectPerms(AvailableUserRole), getProjectNotesById)
-      .put(validateProjectPerms([UserRolesEnum.ADMIN]) , createNoteValidator(), validate, updateProjectNotes)
-      .delete(validateProjectPerms([UserRolesEnum.ADMIN]) , deleteProjectNotes);
+      .put(validateProjectPerms(AvailableUserRole), createNoteValidator(), validate, updateProjectNotes)
+      .delete(validateProjectPerms(AvailableUserRole), deleteProjectNotes);
 
 export default router;

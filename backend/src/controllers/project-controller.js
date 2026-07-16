@@ -1,6 +1,9 @@
 import { User } from "../models/usermodels.js";
 import { Project } from "../models/projectmodels.js";
 import { ProjectMember } from "../models/project-members-models.js";
+import { Tasks } from "../models/taskmodels.js";
+import { subTask } from "../models/subtaskmodels.js";
+import { projectNotes } from "../models/project-notes-model.js";
 import { ApiResponse} from "../utils/apiresponse.js";
 import { ApiError} from "../utils/apierror.js";
 import { asyncHandler} from "../utils/async-handler.js";
@@ -46,7 +49,6 @@ const updateProject = asyncHandler(async(req,res)=>{
 })
 
 const deleteProject = asyncHandler(async(req,res)=>{
-    const {name} = req.body;
     const {projectId} = req.params;
 
     const project = await Project.findByIdAndDelete(projectId
@@ -56,6 +58,14 @@ const deleteProject = asyncHandler(async(req,res)=>{
     if (!project){
         throw new ApiError(404,"project not found!!")
     }
+
+    const taskIds = await Tasks.find({ project: projectId }).distinct("_id");
+    await Promise.all([
+        subTask.deleteMany({ task: { $in: taskIds } }),
+        Tasks.deleteMany({ project: projectId }),
+        projectNotes.deleteMany({ project: projectId }),
+        ProjectMember.deleteMany({ project: projectId }),
+    ]);
 
     return res.status(200).json(
         new ApiResponse(200, project,"project deleted successfully!!")
@@ -143,6 +153,7 @@ const getProjectMembers = asyncHandler(async(req,res)=>{
                             _id:1,
                             username:1,
                             fullName:1,
+                            email:1,
                             avatar:1 
                         }
                     }
@@ -170,7 +181,7 @@ const getProjectMembers = asyncHandler(async(req,res)=>{
         }
     ])
 
-    return res.status(201).json(
+    return res.status(200).json(
         new ApiResponse(200, projectMember,"projectMembers fetched successdfully!!")
     )
 })

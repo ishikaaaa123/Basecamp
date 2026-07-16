@@ -148,7 +148,13 @@ const logout = asyncHandler(async(req,res)=>{
 
 const currentUser = asyncHandler(async(req,res)=>{
     return res.status(200).json(
-        new ApiResponse(200,req.user.username,"current user feteched successfully!!")
+        new ApiResponse(200,{
+            _id: req.user._id,
+            username: req.user.username,
+            email: req.user.email,
+            fullName: req.user.fullName,
+            avatar: req.user.avatar,
+        },"current user fetched successfully!!")
     )
 })
 
@@ -327,7 +333,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 })
 
 export {resetForgotPassword,changeCurrentPassword,forgotPassword,registerUser, resendEmailVerification,login, logout,currentUser, verifyEmail,refreshAccessToken};
-
 
 
 
