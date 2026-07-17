@@ -84,3 +84,7 @@ If you did not request this, you can safely ignore this email.`,
     `,
   };
 };
+
+
+// Backward-compatible alias for the misspelled import in auth.js
+export const forgotPassowrdMailgenContent = forgotPasswordMailgenContent;
