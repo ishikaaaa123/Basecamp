@@ -4,13 +4,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Clean enterprise SaaS design system.
+ * White surfaces, thin borders, single blue accent, Inter typography.
+ * Inspired by Linear, Stripe, GitHub, Vercel, Notion.
+ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-2xl: calc(var(--radius) + 6px);
+  --radius-3xl: calc(var(--radius) + 10px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -40,56 +46,57 @@
   --color-cyan: var(--cyan);
   --color-amber: var(--amber);
   --color-pink: var(--pink);
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
 }
 
 :root {
-  --radius: 1.1rem;
-  /* Dark-only application surface. */
-  color-scheme: dark;
-  --background: oklch(0.13 0.03 280);
-  --foreground: oklch(0.98 0.005 250);
-  --card: oklch(0.18 0.035 280);
-  --card-foreground: oklch(0.98 0.005 250);
-  --popover: oklch(0.18 0.035 280);
-  --popover-foreground: oklch(0.98 0.005 250);
-  --primary: oklch(0.72 0.22 310);
-  --primary-foreground: oklch(0.13 0.03 280);
-  --secondary: oklch(0.26 0.05 285);
-  --secondary-foreground: oklch(0.98 0.005 250);
-  --muted: oklch(0.22 0.03 280);
-  --muted-foreground: oklch(0.72 0.03 270);
-  --accent: oklch(0.32 0.1 305);
-  --accent-foreground: oklch(0.98 0.005 250);
-  --destructive: oklch(0.68 0.24 25);
-  --destructive-foreground: oklch(0.98 0.005 250);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.72 0.22 310);
+  --radius: 0.5rem;
+  color-scheme: light;
 
-  --brand: oklch(0.72 0.24 310); /* magenta-violet */
-  --brand-2: oklch(0.7 0.22 250); /* electric blue */
-  --cyan: oklch(0.85 0.16 195); /* neon cyan */
-  --amber: oklch(0.82 0.17 75); /* warm amber */
-  --pink: oklch(0.78 0.2 350); /* hot pink */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
 
-  --chart-1: oklch(0.72 0.24 310);
-  --chart-2: oklch(0.75 0.18 195);
-  --chart-3: oklch(0.7 0.22 250);
-  --chart-4: oklch(0.82 0.17 75);
-  --chart-5: oklch(0.78 0.2 350);
+  /* Primary = deep, saturated blue */
+  --primary: oklch(0.42 0.20 265);
+  --primary-foreground: oklch(1 0 0);
 
-  --gradient-brand: linear-gradient(
-    120deg,
-    oklch(0.72 0.24 310),
-    oklch(0.7 0.22 250) 55%,
-    oklch(0.85 0.16 195)
-  );
-  --gradient-warm: linear-gradient(120deg, oklch(0.78 0.2 350), oklch(0.82 0.17 75));
-  --shadow-glow: 0 20px 60px -20px color-mix(in oklab, var(--brand) 55%, transparent);
-  --shadow-glow-cyan: 0 20px 60px -20px color-mix(in oklab, var(--cyan) 55%, transparent);
+  --secondary: oklch(0.97 0.005 250);
+  --secondary-foreground: oklch(0.22 0.02 260);
+  --muted: oklch(0.97 0.005 250);
+  --muted-foreground: oklch(0.5 0.015 260);
+  --accent: oklch(0.96 0.01 255);
+  --accent-foreground: oklch(0.22 0.02 260);
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.92 0.005 250);
+  --input: oklch(0.92 0.005 250);
+  --ring: oklch(0.42 0.20 265);
+
+  /* Brand accent palette — restored for gradients & icon tiles */
+  --brand: oklch(0.42 0.20 265);      /* deep blue */
+  --brand-2: oklch(0.55 0.22 285);    /* indigo/violet */
+  --cyan: oklch(0.72 0.14 220);       /* cyan */
+  --amber: oklch(0.78 0.16 75);       /* amber */
+  --pink: oklch(0.68 0.20 350);       /* pink */
+
+  --chart-1: oklch(0.42 0.20 265);
+  --chart-2: oklch(0.72 0.14 220);
+  --chart-3: oklch(0.65 0.15 150);
+  --chart-4: oklch(0.78 0.16 75);
+  --chart-5: oklch(0.68 0.20 350);
+
+  /* Legacy tokens neutralized to subtle blue tint */
+  --gradient-brand: var(--brand);
+  --gradient-warm: var(--brand);
+  --shadow-glow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-glow-cyan: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 @layer base {
@@ -103,96 +110,72 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
-    background-image:
-      radial-gradient(
-        ellipse 1000px 600px at 15% -10%,
-        color-mix(in oklab, var(--brand) 22%, transparent),
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse 900px 600px at 90% 10%,
-        color-mix(in oklab, var(--brand-2) 18%, transparent),
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse 800px 500px at 50% 110%,
-        color-mix(in oklab, var(--cyan) 15%, transparent),
-        transparent 60%
-      );
-    background-attachment: fixed;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   h1,
   h2,
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     font-weight: 600;
+    color: var(--color-foreground);
   }
 }
 
+/* Legacy utility overrides — kept so existing components stay on-brand
+   without touching every file. All resolve to clean, minimal styling. */
+
 @utility text-gradient {
-  background: var(--gradient-brand);
-  background-size: 200% 200%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
-  animation: gradient-shift 10s ease infinite;
 }
 
 @utility text-gradient-warm {
-  background: var(--gradient-warm);
+  background: linear-gradient(135deg, var(--amber), var(--pink));
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
+/* Filled blue feature card — white text, deep blue background,
+   subtle gradient sheen and hover elevation. */
 @utility card-vibrant {
-  position: relative;
-  background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--card) 80%, transparent),
-    color-mix(in oklab, var(--card) 40%, transparent)
-  );
-  backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid color-mix(in oklab, white 8%, transparent);
+  background: linear-gradient(135deg, oklch(0.42 0.20 265), oklch(0.34 0.18 268));
+  color: #ffffff;
+  border: 1px solid oklch(0.34 0.18 268);
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 10px 30px -18px oklch(0.42 0.20 265 / 0.55);
   transition:
-    border-color 0.3s,
-    transform 0.3s,
-    box-shadow 0.3s;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+
+  & h1, & h2, & h3, & h4, & h5, & h6 { color: #ffffff; }
+  & p, & span, & div { color: inherit; }
+  & .text-muted-foreground { color: rgba(255, 255, 255, 0.75) !important; }
+
   &:hover {
-    border-color: color-mix(in oklab, var(--brand) 60%, transparent);
-    box-shadow: var(--shadow-glow);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.08),
+      0 20px 40px -18px oklch(0.42 0.20 265 / 0.7);
   }
 }
 
-@keyframes gradient-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
 @utility animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 8s ease infinite;
+  animation: none;
 }
 
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.75;
-    transform: scale(1.05);
-  }
-}
 @utility animate-pulse-glow {
-  animation: pulse-glow 5s ease-in-out infinite;
+  animation: none;
+  opacity: 0;
 }
+
