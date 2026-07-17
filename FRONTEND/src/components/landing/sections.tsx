@@ -136,7 +136,7 @@ const capabilities = [
   {
     icon: FileText,
     title: "Project Notes",
-    desc: "Admins manage notes while Project Admins and Members can view project notes within their allowed projects.",
+    desc: "Admins,project admin as well as team members can add notes in the project.",
   },
   {
     icon: Paperclip,
