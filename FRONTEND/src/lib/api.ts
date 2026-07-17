@@ -16,7 +16,7 @@ const TOKEN_KEY = "pc_access_token";
 export const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  timeout: 15_000,
+  timeout: 30_000,
   headers: { "Content-Type": "application/json" },
 });
 
