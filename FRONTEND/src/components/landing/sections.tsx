@@ -116,7 +116,7 @@ const capabilities = [
   {
     icon: Shield,
     title: "JWT Authentication",
-    desc: "Secure account access with email verification, login, refresh tokens, logout, and password reset support.",
+    desc: "Secure account access with email verification, login, refresh tokens and logout.",
   },
   {
     icon: KeyRound,
