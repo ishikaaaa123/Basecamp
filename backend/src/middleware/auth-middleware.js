@@ -16,14 +16,10 @@ export const verifyJWT = asyncHandler(async(req,res,next) =>{
 
     try {
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken -emailVerificationToken  -emailVerificationExpiry");
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
         if (!user){
             throw new ApiError(401,"Invalid AT");
         }
-        if (!user.isEmailVerified){
-            throw new ApiError(403,"Please verify your email before accessing your account.");
-        }
-
         req.user = user;
         next();
     } catch (error) {

@@ -30,13 +30,6 @@ REFRESH_TOKEN_SECRET=<different-long-random-secret>
 REFRESH_TOKEN_EXPIRY=10d
 CORS_ORIGIN=https://app.your-domain.example
 BACKEND_PUBLIC_URL=https://api.your-domain.example
-FORGOT_PASSWORD_REDIRECT_URL=https://app.your-domain.example/reset-password
-SMTP_HOST=<smtp-host>
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=<smtp-user>
-SMTP_PASS=<smtp-password>
-MAIL_FROM="Project Camp <noreply@your-domain.example>"
 ```
 
 After deployment, open `https://api.your-domain.example/api/v1/healthcheck`.
@@ -62,11 +55,9 @@ update with the final domain.
 
 ## 4. Verify the live app
 
-1. Register a new account and confirm the verification email link uses the API
-   domain.
-2. Log in, create a project, and perform a task update.
-3. Upload a file and confirm its link uses the API domain.
-4. Refresh a nested route such as `/dashboard` and a project URL. Configure an
+1. Register a new account, then log in and create a project.
+2. Perform a task update and upload a file, confirming its link uses the API domain.
+3. Refresh a nested route such as `/dashboard` and a project URL. Configure an
    SPA fallback to `index.html` if the frontend host does not provide one.
 
 ## Important production note

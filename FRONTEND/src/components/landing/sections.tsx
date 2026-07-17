@@ -116,7 +116,7 @@ const capabilities = [
   {
     icon: Shield,
     title: "JWT Authentication",
-    desc: "Secure account access with email verification, login, refresh tokens and logout.",
+    desc: "Secure account access with login, refresh tokens and logout.",
   },
   {
     icon: KeyRound,
@@ -175,7 +175,7 @@ const flow = [
 const faqs = [
   {
     q: "How does authentication work?",
-    a: "Project Camp uses JWT-based authentication with access and refresh tokens. Registration includes email verification, and password reset uses time-limited reset tokens.",
+    a: "Project Camp uses JWT-based authentication with access and refresh tokens.",
   },
   {
     q: "Which roles are supported?",

@@ -2,14 +2,14 @@
 
 A full-stack project management app (a lightweight "Basecamp clone") with projects, role-based team membership, tasks, subtasks, file attachments, and project notes.
 
-- **Backend:** Node.js, Express 5, MongoDB/Mongoose, JWT auth, Nodemailer
+- **Backend:** Node.js, Express 5, MongoDB/Mongoose, JWT auth
 - **Frontend:** React 19, TypeScript, Vite, TanStack Router + Query, Tailwind CSS, shadcn/ui (Radix primitives)
 
 ---
 
 ## Features
 
-- **Auth:** register/login with JWT access + refresh tokens, email verification, forgot/reset password, change password, resend verification
+- **Auth:** register/login with JWT access + refresh tokens and change password
 - **Projects:** create/list/update/delete, with member counts
 - **Team membership:** add/remove members, per-project roles
 - **Role-based access control:** `admin`, `project_admin`, `member` — see permission matrix below
@@ -28,7 +28,6 @@ A full-stack project management app (a lightweight "Basecamp clone") with projec
 | Database | MongoDB via Mongoose 9 |
 | Auth | JSON Web Tokens (`jsonwebtoken`), `bcrypt` for password hashing |
 | Validation | `express-validator` |
-| Email | `nodemailer` + `mailgen` for templated verification/reset emails |
 | Uploads | `multer` |
 | Dev tooling | `nodemon`, `prettier` |
 
@@ -52,9 +51,9 @@ Basecampy-main/
 │   │   ├── controllers/      # auth, projects, tasks, notes, healthcheck
 │   │   ├── db/                # MongoDB connection
 │   │   ├── middleware/        # auth, multer (uploads), request validation
-│   │   ├── models/             # User, Project, ProjectMembers, Task, Subtask, ProjectNotes, PendingRegistration
+│   │   ├── models/             # User, Project, ProjectMembers, Task, Subtask, ProjectNotes
 │   │   ├── routes/             # Express routers per resource
-│   │   ├── utils/              # ApiError, ApiResponse, asyncHandler, constants, mailgen
+│   │   ├── utils/              # ApiError, ApiResponse, asyncHandler, constants
 │   │   ├── validators/         # express-validator schemas
 │   │   ├── app.js              # Express app, middleware, route mounting
 │   │   └── index.js            # entrypoint: loads env, connects DB, starts server
@@ -74,7 +73,7 @@ Base path: `/api/v1`
 
 | Resource | Routes |
 |---|---|
-| **Auth** (`/auth`) | `POST /register`, `POST /login`, `POST /logout`, `GET /current-user`, `POST /change-password`, `POST /refresh-token`, `GET /verify-email/:token`, `POST /forgot-password`, `POST /reset-password/:token`, `POST /resend-email-verification` |
+| **Auth** (`/auth`) | `POST /register`, `POST /login`, `POST /logout`, `GET /current-user`, `POST /change-password`, `POST /refresh-token` |
 | **Projects** (`/projects`) | `GET /`, `POST /`, `GET /:projectId`, `PUT /:projectId`, `DELETE /:projectId`, `GET /:projectId/members`, `POST /:projectId/members`, `PUT /:projectId/members/:userId`, `DELETE /:projectId/members/:userId` |
 | **Tasks** (`/tasks`) | `GET /:projectId`, `POST /:projectId`, `GET /:projectId/t/:taskId`, `PUT /:projectId/t/:taskId`, `DELETE /:projectId/t/:taskId`, `POST /:projectId/t/:taskId/subtasks`, `PUT /:projectId/st/:subTaskId`, `DELETE /:projectId/st/:subTaskId` |
 | **Notes** (`/notes`) | `GET /:projectId`, `POST /:projectId`, `GET /:projectId/n/:noteId`, `PUT /:projectId/n/:noteId`, `DELETE /:projectId/n/:noteId` |
@@ -102,7 +101,6 @@ Full endpoint-by-endpoint spec, request bodies, and status codes live in [`backe
 
 - Node.js 18+
 - A MongoDB instance (local or Atlas)
-- An SMTP account for sending verification/reset emails (Gmail App Password works for local dev)
 
 ### 1. Backend
 
@@ -126,18 +124,6 @@ REFRESH_TOKEN_EXPIRY=10d
 
 CORS_ORIGIN=https://app.your-domain.example
 BACKEND_PUBLIC_URL=https://api.your-domain.example
-FORGOT_PASSWORD_REDIRECT_URL=https://app.your-domain.example/reset-password
-
-# SMTP (see backend/.env.example for the Gmail App Password notes)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-project-email@gmail.com
-SMTP_PASS=your-16-character-gmail-app-password
-MAIL_FROM="Project Camp <your-project-email@gmail.com>"
-SMTP_CONNECTION_TIMEOUT_MS=8000
-SMTP_GREETING_TIMEOUT_MS=8000
-SMTP_SOCKET_TIMEOUT_MS=10000
 ```
 
 The API will be available at the public URL configured by your hosting provider.

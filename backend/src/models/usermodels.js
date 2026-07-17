@@ -1,7 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 
 const userSchema = new Schema(
     {
@@ -38,33 +37,15 @@ const userSchema = new Schema(
             type:String,
             required:[true,"Password is required"],
         },
-        isEmailVerified:{
-            type:Boolean,
-            default:false,
-        },
         refreshToken:{
             type:String
         }, 
-        forgotPasswordToken:{
-            type:String,
-        },
-        forgotPasswordexpiry:{
-            type:Date
-        },
-        emailVerificationToken:{
-            type:String
-        },
-        emailVerificationExpiry:{
-            type:Date
-        }
     } ,
     {timestamps:true}
 )
 
 userSchema.pre("save", async function(){
     if (!this.isModified("password")) return;
-    // A verified pending registration already holds a bcrypt hash. Do not hash it again.
-    if (/^\$2[aby]\$/.test(this.password)) return;
     this.password = await bcrypt.hash(this.password,10);
 })
 
@@ -94,16 +75,6 @@ userSchema.methods.generateRefreshToken = function(){
     )
 
     jwt.sign()
-}
-
-userSchema.methods.generateTemporaryToken = function(){
-    const unHashedToken = crypto.randomBytes(20).toString("hex");
-    const HashedToken = crypto.createHash("sha256")
-                              .update(unHashedToken)
-                              .digest("hex");
-
-    const TokenExpiry = Date.now() +  (20*60*1000)//20mins
-    return {unHashedToken, HashedToken, TokenExpiry};                             
 }
 
 export const User = mongoose.model("User",userSchema);

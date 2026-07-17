@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { register, getApiError, resendEmailVerification } from "@/lib/api";
+import { register, getApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -17,9 +17,6 @@ function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [registered, setRegistered] = useState(false);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -30,27 +27,11 @@ function RegisterPage() {
     setSubmitting(true);
     try {
       await register(form);
-      setRegistered(true);
-      setInfo(
-        `Verification email sent to ${form.email}. Open the link in your email to create your account, then sign in.`,
-      );
+      setInfo("Account created successfully. You can sign in now.");
     } catch (err) {
       setError(getApiError(err));
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function onResend() {
-    setResendState("sending");
-    setResendMsg(null);
-    try {
-      await resendEmailVerification(form.email);
-      setResendState("sent");
-      setResendMsg("Verification email sent. Check your inbox.");
-    } catch (err) {
-      setResendState("error");
-      setResendMsg(getApiError(err));
     }
   }
 
@@ -107,28 +88,6 @@ function RegisterPage() {
             {submitting ? "Creating account…" : "Create account"}
           </button>
 
-          {registered && (
-            <div className="rounded-md border border-border bg-background/50 p-3 text-sm">
-              <p className="text-muted-foreground">Didn't get the email?</p>
-              <button
-                type="button"
-                onClick={onResend}
-                disabled={resendState === "sending"}
-                className="mt-2 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent disabled:opacity-60"
-              >
-                {resendState === "sending" ? "Sending…" : "Resend verification email"}
-              </button>
-              {resendMsg && (
-                <p
-                  className={`mt-2 text-xs ${
-                    resendState === "error" ? "text-destructive" : "text-muted-foreground"
-                  }`}
-                >
-                  {resendMsg}
-                </p>
-              )}
-            </div>
-          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

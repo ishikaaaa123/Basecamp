@@ -75,12 +75,6 @@ export async function getCurrentUser() {
   return data?.data ?? data;
 }
 
-// ---- Email verification ----
-
-export async function resendEmailVerification(email: string) {
-  await api.post("/auth/resend-email-verification", { email });
-}
-
 // ---- Projects / Tasks / Notes ----
 
 export interface Project {

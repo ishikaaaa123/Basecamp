@@ -23,18 +23,6 @@ const userChangeCurrentValidator = ()=>{
         body("newPassword").notEmpty().withMessage("password must not be empty!")
     ]
 }
-const userForgotPasswordValidator = ()=>{
-    return  [
-        body("email").trim().notEmpty().withMessage("Email is reqd").isEmail().withMessage("Email is invalid!") ,
-    ]
-}
-
-const userResetForgotPasswordValidator = ()=>{
-    return [
-        body("newPassword").notEmpty().withMessage("password must not be empty!")
-    ]
-}
-
 const createProjectValidator = ()=>{
     return [
         body("name").trim().notEmpty().withMessage("Project must have a name!!"),
@@ -91,4 +79,4 @@ const createNoteValidator = ()=>{
     ]
 }
 
-export {createNoteValidator,updateTaskValidator, updateSubTaskValidator, createTaskValidator, createSubTaskValidator,addMemberstoProjectValidator,createProjectValidator, userResetForgotPasswordValidator,userForgotPasswordValidator,userChangeCurrentValidator,userRegValidator, userLoginValidator}; 
+export {createNoteValidator,updateTaskValidator, updateSubTaskValidator, createTaskValidator, createSubTaskValidator,addMemberstoProjectValidator,createProjectValidator,userChangeCurrentValidator,userRegValidator, userLoginValidator};
