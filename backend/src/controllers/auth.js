@@ -30,18 +30,11 @@ const registerUser = asyncHandler( async (req,res)=>{
     }
 
     const user = await User.create({ email, username, fullName, password });
-    const { accessToken, refreshToken } = await generateRefreshandAccessToken(user._id);
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
 
     return res.status(200)
-              .cookie("accessToken", accessToken, options)
-              .cookie("refreshToken", refreshToken, options)
               .json(
                 new ApiResponse(200,
-                    { _id: user._id, email: user.email, accessToken, refreshToken },
+                    { _id: user._id, email: user.email },
                     "Account created successfully."
                  )
               )
@@ -180,5 +173,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 })
 
 export {changeCurrentPassword,registerUser,login, logout,currentUser,refreshAccessToken};
+
 
 

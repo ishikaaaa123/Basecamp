@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { register, getApiError } from "@/lib/api";
 
@@ -13,7 +13,6 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
-  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", username: "", fullName: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -28,7 +27,7 @@ function RegisterPage() {
     setSubmitting(true);
     try {
       await register(form);
-      navigate({ to: "/dashboard" });
+      setInfo("Account created successfully. You can sign in now.");
     } catch (err) {
       setError(getApiError(err));
     } finally {
