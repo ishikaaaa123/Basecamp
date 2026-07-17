@@ -116,7 +116,7 @@ export interface ProjectNote {
   _id: string;
   content: string;
   project: string;
-  createdBy?: { username?: string; email?: string } | string;
+  createdBy?: { _id?: string; fullName?: string; username?: string; email?: string } | string;
   createdAt?: string;
 }
 
@@ -205,6 +205,10 @@ export async function listProjectNotes(projectId: string): Promise<ProjectNote[]
 export async function createProjectNote(projectId: string, content: string): Promise<ProjectNote> {
   const { data } = await api.post(`/notes/${projectId}`, { content });
   return unwrap<ProjectNote>(data);
+}
+
+export async function deleteProjectNote(projectId: string, noteId: string): Promise<void> {
+  await api.delete(`/notes/${projectId}/n/${noteId}`);
 }
 
 // ---- Project members / role management ----

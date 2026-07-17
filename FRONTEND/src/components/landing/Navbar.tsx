@@ -26,15 +26,23 @@ export function Navbar() {
       key={l.href}
       href={l.href}
       onClick={onClick}
-      className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      className={cn(
+        "rounded-md px-3 py-2 text-sm transition-colors",
+        scrolled
+          ? "text-muted-foreground hover:text-foreground"
+          : "text-white/80 hover:text-white",
+      )}
     >
       {l.label}
     </a>
   );
 
-  const signupClass =
-    "rounded-lg bg-gradient-to-r from-[var(--brand)] via-[var(--brand-2)] to-[var(--cyan)] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[var(--brand)]/30";
 
+  const signupClass =
+    "rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-500";
+
+  // Navbar sits over the dark navy hero on "/", so keep it translucent-dark
+  // until the user scrolls onto the light content below.
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -42,16 +50,18 @@ export function Navbar() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "backdrop-blur-xl bg-background/60 border-b border-border/60" : "bg-transparent",
+        scrolled
+          ? "backdrop-blur-xl bg-background/85 border-b border-border text-foreground"
+          : "bg-transparent text-white",
       )}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <a href="#" className="flex items-center gap-2.5">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[var(--brand)] via-[var(--brand-2)] to-[var(--cyan)] shadow-lg shadow-[var(--brand)]/30">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--brand)] shadow-sm">
             <ServerCog className="h-4 w-4 text-white" />
           </div>
-          <span className="font-display text-lg font-semibold tracking-tight">
-            Project Basecamp <span className="text-gradient"></span>
+          <span className={cn("font-display text-lg font-semibold tracking-tight", scrolled ? "text-foreground" : "text-white")}>
+            Project Basecamp
           </span>
         </a>
 
@@ -59,7 +69,12 @@ export function Navbar() {
           {links.map((l) => navLink(l))}
           <Link
             to="/login"
-            className="ml-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className={cn(
+              "ml-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+              scrolled
+                ? "text-muted-foreground hover:text-foreground"
+                : "text-white/85 hover:text-white",
+            )}
           >
             Log in
           </Link>

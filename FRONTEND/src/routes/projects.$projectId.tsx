@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ClipboardList,
   FileText,
+  FolderKanban,
   Users,
   UserPlus,
   Loader2,
@@ -39,6 +40,7 @@ import {
   deleteTask,
   deleteSubtask,
   createProjectNote,
+  deleteProjectNote,
   listProjectNotes,
   listProjectMembers,
   addProjectMember,
@@ -116,7 +118,7 @@ function ProjectShell() {
   );
   const myRole: ProjectRole | undefined = myMembership?.role;
   const canManageMembers = myRole === "admin";
-  const canManageTasks = Boolean(myRole);
+  const canManageTasks = myRole === "admin" || myRole === "project_admin";
   const [confirmDeletion, setConfirmDeletion] = useState(false);
 
   const deleteMut = useMutation({
@@ -161,22 +163,34 @@ function ProjectShell() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35 }}
-              className="rounded-2xl border border-border/60 p-6"
+              className="panel-navy relative overflow-hidden rounded-2xl p-7"
             >
-              <div className="flex flex-wrap items-start justify-between gap-4">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.08]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+                  backgroundSize: "40px 40px",
+                  maskImage: "radial-gradient(ellipse at 20% 0%, black 30%, transparent 75%)",
+                }}
+              />
+              <div className="relative flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white/80">
+                    <FolderKanban className="h-3 w-3" /> Project
+                  </div>
+                  <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                     {projectQ.data.name}
                   </h1>
                   {projectQ.data.description && (
-                    <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                    <p className="mt-2 max-w-3xl text-sm text-white/70">
                       {projectQ.data.description}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   {myRole && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-widest text-white/85">
                       <Shield className="h-3 w-3" />
                       {myRole.replace("_", " ")}
                     </span>
@@ -185,7 +199,7 @@ function ProjectShell() {
                     <button
                       type="button"
                       onClick={() => setConfirmDeletion(true)}
-                      className="inline-flex items-center gap-1 rounded-md border border-destructive/50 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+                      className="inline-flex items-center gap-1 rounded-md border border-red-400/50 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-500/20"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Delete project
                     </button>
@@ -202,8 +216,14 @@ function ProjectShell() {
               projectId={projectId}
               members={membersQ.data ?? []}
               canManage={canManageTasks}
+              currentUserId={currentUser?._id}
             />
-            <NotesPanel projectId={projectId} canManage={Boolean(myRole)} />
+            <NotesPanel
+              projectId={projectId}
+              canCreate={Boolean(myRole)}
+              currentUserId={currentUser?._id}
+              canManageAll={canManageTasks}
+            />
           </div>
           <MembersPanel
             projectId={projectId}
@@ -291,10 +311,12 @@ function TasksPanel({
   projectId,
   members,
   canManage,
+  currentUserId,
 }: {
   projectId: string;
   members: ProjectMember[];
   canManage: boolean;
+  currentUserId?: string;
 }) {
   const [creating, setCreating] = useState(false);
   const q = useQuery({
@@ -365,6 +387,7 @@ function TasksPanel({
             projectId={projectId}
             members={members}
             canManage={canManage}
+            currentUserId={currentUserId}
           />
         ))}
       </div>
@@ -384,11 +407,13 @@ function TaskRow({
   projectId,
   members,
   canManage,
+  currentUserId,
 }: {
   task: Task;
   projectId: string;
   members: ProjectMember[];
   canManage: boolean;
+  currentUserId?: string;
 }) {
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -415,14 +440,23 @@ function TaskRow({
   const meta = STATUS_META[task.status] ?? STATUS_META.todo;
   const Icon = meta.icon;
   const subtasks = detailsQ.data?.subtasks ?? [];
+  const assignedUserId =
+    typeof task.assignedTo === "object" ? task.assignedTo?._id : task.assignedTo;
+  const canUpdateStatus = canManage || Boolean(currentUserId && assignedUserId === currentUserId);
 
   return (
     <div className="rounded-xl border border-border/60 px-3 py-3">
       <div className="flex items-start gap-3">
         <button
           type="button"
-          disabled={statusMut.isPending}
-          title={task.status === "done" ? "Mark as to do" : "Mark as completed"}
+          disabled={statusMut.isPending || !canUpdateStatus}
+          title={
+            canUpdateStatus
+              ? task.status === "done"
+                ? "Mark as to do"
+                : "Mark as completed"
+              : "Only the assigned member can update this status"
+          }
           onClick={() => statusMut.mutate(task.status === "done" ? "todo" : "done")}
           className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${meta.tint} disabled:opacity-60`}
         >
@@ -438,6 +472,19 @@ function TaskRow({
             <span className="rounded-full border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
               {meta.label}
             </span>
+            {canUpdateStatus && (
+              <select
+                aria-label={`Update status for ${task.title}`}
+                value={task.status}
+                disabled={statusMut.isPending}
+                onChange={(event) => statusMut.mutate(event.target.value as Task["status"])}
+                className="rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground disabled:opacity-60"
+              >
+                <option value="todo">Todo</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+              </select>
+            )}
           </div>
           {task.description && (
             <p className="mt-0.5 text-xs text-muted-foreground">{task.description}</p>
@@ -459,14 +506,16 @@ function TaskRow({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Edit task"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Edit task"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
           {canManage && (
             <button
               type="button"
@@ -476,14 +525,16 @@ function TaskRow({
               + Subtask
             </button>
           )}
-          <button
-            type="button"
-            disabled={deleteMut.isPending}
-            onClick={() => deleteMut.mutate()}
-            className="text-destructive hover:underline"
-          >
-            Delete
-          </button>
+          {canManage && (
+            <button
+              type="button"
+              disabled={deleteMut.isPending}
+              onClick={() => deleteMut.mutate()}
+              className="text-destructive hover:underline"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
       {subtasks.length > 0 && (
@@ -495,6 +546,8 @@ function TaskRow({
               projectId={projectId}
               taskId={task._id}
               members={members}
+              canManage={canManage}
+              currentUserId={currentUserId}
             />
           ))}
         </div>
@@ -524,11 +577,15 @@ function SubtaskRow({
   projectId,
   taskId,
   members,
+  canManage,
+  currentUserId,
 }: {
   subtask: Subtask;
   projectId: string;
   taskId: string;
   members: ProjectMember[];
+  canManage: boolean;
+  currentUserId?: string;
 }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -546,13 +603,20 @@ function SubtaskRow({
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task", projectId, taskId] }),
     onError: (error) => toast.error(getApiError(error)),
   });
+  const assignedUserId =
+    typeof subtask.assignedTo === "object" ? subtask.assignedTo?._id : subtask.assignedTo;
+  const canUpdateStatus = canManage || Boolean(currentUserId && assignedUserId === currentUserId);
   return (
     <div className="flex items-center gap-2 py-1 text-xs">
       <button
         type="button"
-        disabled={completeMut.isPending}
+        disabled={completeMut.isPending || !canUpdateStatus}
         onClick={() => completeMut.mutate()}
-        title="Toggle subtask completion"
+        title={
+          canUpdateStatus
+            ? "Toggle subtask completion"
+            : "Only the assigned member can update this status"
+        }
       >
         {subtask.isCompleted ? (
           <CheckCircle2 className="h-3.5 w-3.5 text-[var(--cyan)]" />
@@ -574,22 +638,26 @@ function SubtaskRow({
           <Paperclip className="h-3 w-3" />
         </a>
       ))}
-      <button
-        aria-label="Edit subtask"
-        type="button"
-        onClick={() => setEditing(true)}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <Pencil className="h-3 w-3" />
-      </button>
-      <button
-        type="button"
-        disabled={deleteMut.isPending}
-        onClick={() => deleteMut.mutate()}
-        className="ml-auto text-destructive hover:underline"
-      >
-        Delete
-      </button>
+      {canManage && (
+        <button
+          aria-label="Edit subtask"
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+      )}
+      {canManage && (
+        <button
+          type="button"
+          disabled={deleteMut.isPending}
+          onClick={() => deleteMut.mutate()}
+          className="ml-auto text-destructive hover:underline"
+        >
+          Delete
+        </button>
+      )}
       {editing && (
         <EditSubtaskModal
           projectId={projectId}
@@ -1062,7 +1130,17 @@ function TaskFormModal({
   );
 }
 
-function NotesPanel({ projectId, canManage }: { projectId: string; canManage: boolean }) {
+function NotesPanel({
+  projectId,
+  canCreate,
+  currentUserId,
+  canManageAll,
+}: {
+  projectId: string;
+  canCreate: boolean;
+  currentUserId?: string;
+  canManageAll: boolean;
+}) {
   const [content, setContent] = useState("");
   const qc = useQueryClient();
   const q = useQuery({
@@ -1080,6 +1158,14 @@ function NotesPanel({ projectId, canManage }: { projectId: string; canManage: bo
     onError: (error) => toast.error(getApiError(error)),
   });
   const notes = q.data ?? [];
+  const deleteMut = useMutation({
+    mutationFn: (noteId: string) => deleteProjectNote(projectId, noteId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notes", projectId] });
+      toast.success("Note deleted");
+    },
+    onError: (error) => toast.error(getApiError(error)),
+  });
 
   return (
     <section className="rounded-2xl border border-border/60 p-6">
@@ -1087,7 +1173,7 @@ function NotesPanel({ projectId, canManage }: { projectId: string; canManage: bo
         <FileText className="h-4 w-4 text-[var(--amber)]" />
         <h3 className="font-display text-base font-semibold">Notes</h3>
       </div>
-      {canManage && (
+      {canCreate && (
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -1129,11 +1215,30 @@ function NotesPanel({ projectId, canManage }: { projectId: string; canManage: bo
             className="rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm"
           >
             <p className="whitespace-pre-line text-foreground/90">{n.content}</p>
-            {n.createdAt && (
-              <div className="mt-1.5 text-[11px] text-muted-foreground">
-                {new Date(n.createdAt).toLocaleString()}
+            <div className="mt-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+              <div>
+                Added by{" "}
+                {typeof n.createdBy === "object"
+                  ? n.createdBy?.fullName ||
+                    n.createdBy?.username ||
+                    n.createdBy?.email ||
+                    "Unknown"
+                  : "Unknown"}
+                {n.createdAt && ` · ${new Date(n.createdAt).toLocaleString()}`}
               </div>
-            )}
+              {(canManageAll ||
+                (typeof n.createdBy === "object" && n.createdBy?._id === currentUserId) ||
+                n.createdBy === currentUserId) && (
+                <button
+                  type="button"
+                  disabled={deleteMut.isPending}
+                  onClick={() => deleteMut.mutate(n._id)}
+                  className="text-destructive hover:underline disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

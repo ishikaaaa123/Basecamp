@@ -5,9 +5,20 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Clean enterprise SaaS design system.
- * White surfaces, thin borders, single blue accent, Inter typography.
- * Inspired by Linear, Stripe, GitHub, Vercel, Notion.
+ * Premium SaaS design system — Blue + Navy + White + Gray.
+ * Inspired by Stripe, Linear, GitHub, Vercel, Notion, Zillow.
+ *
+ * Palette (source of truth):
+ *   Primary Blue   #2563EB
+ *   Dark Navy      #111827
+ *   Charcoal       #1F2937
+ *   Page BG        #F8FAFC
+ *   Card BG        #FFFFFF
+ *   Border         #E5E7EB
+ *   Text           #111827 / #6B7280
+ *   Success        #16A34A
+ *   Warning        #F59E0B
+ *   Danger         #DC2626
  */
 
 @theme inline {
@@ -43,60 +54,77 @@
   --color-chart-5: var(--chart-5);
   --color-brand: var(--brand);
   --color-brand-2: var(--brand-2);
+  --color-navy: var(--navy);
+  --color-charcoal: var(--charcoal);
+  --color-surface: var(--surface);
+  --color-tint: var(--tint);
   --color-cyan: var(--cyan);
   --color-amber: var(--amber);
   --color-pink: var(--pink);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem; /* 12px cards per spec */
   color-scheme: light;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.18 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 260);
+  /* Neutral surfaces */
+  --background: oklch(0.985 0.005 250);  /* #F8FAFC page bg */
+  --foreground: oklch(0.20 0.03 260);    /* #111827 text primary */
+  --card: oklch(1 0 0);                   /* #FFFFFF card bg */
+  --card-foreground: oklch(0.20 0.03 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 260);
+  --popover-foreground: oklch(0.20 0.03 260);
+  --surface: oklch(1 0 0);                /* pure white section */
+  --tint: oklch(0.975 0.012 255);         /* very soft blue tint */
 
-  /* Primary = deep, saturated blue */
-  --primary: oklch(0.42 0.20 265);
+  /* Primary = #2563EB */
+  --primary: oklch(0.55 0.20 262);
   --primary-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.97 0.005 250);
-  --secondary-foreground: oklch(0.22 0.02 260);
-  --muted: oklch(0.97 0.005 250);
-  --muted-foreground: oklch(0.5 0.015 260);
-  --accent: oklch(0.96 0.01 255);
-  --accent-foreground: oklch(0.22 0.02 260);
-  --destructive: oklch(0.6 0.22 25);
+  --secondary: oklch(0.97 0.006 250);
+  --secondary-foreground: oklch(0.24 0.03 260);
+  --muted: oklch(0.97 0.006 250);
+  --muted-foreground: oklch(0.53 0.02 258); /* #6B7280 */
+  --accent: oklch(0.955 0.015 258);
+  --accent-foreground: oklch(0.24 0.03 260);
+  --destructive: oklch(0.58 0.22 27);       /* #DC2626 */
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.62 0.17 148);          /* #16A34A */
+  --warning: oklch(0.80 0.17 78);           /* #F59E0B */
 
-  --border: oklch(0.92 0.005 250);
-  --input: oklch(0.92 0.005 250);
-  --ring: oklch(0.42 0.20 265);
+  --border: oklch(0.918 0.008 255);         /* #E5E7EB */
+  --input: oklch(0.918 0.008 255);
+  --ring: oklch(0.55 0.20 262);
 
-  /* Brand accent palette — restored for gradients & icon tiles */
-  --brand: oklch(0.42 0.20 265);      /* deep blue */
-  --brand-2: oklch(0.55 0.22 285);    /* indigo/violet */
-  --cyan: oklch(0.72 0.14 220);       /* cyan */
-  --amber: oklch(0.78 0.16 75);       /* amber */
-  --pink: oklch(0.68 0.20 350);       /* pink */
+  /* Accent palette (used for icon tiles / gradients) */
+  --brand: oklch(0.55 0.20 262);            /* primary blue */
+  --brand-2: oklch(0.38 0.14 265);          /* deep blue */
+  --navy: oklch(0.20 0.03 260);             /* #111827 */
+  --charcoal: oklch(0.28 0.03 260);         /* #1F2937 */
+  --cyan: oklch(0.68 0.13 220);
+  --amber: oklch(0.78 0.16 75);
+  --pink: oklch(0.68 0.20 350);
 
-  --chart-1: oklch(0.42 0.20 265);
-  --chart-2: oklch(0.72 0.14 220);
-  --chart-3: oklch(0.65 0.15 150);
+  --chart-1: oklch(0.55 0.20 262);
+  --chart-2: oklch(0.68 0.13 220);
+  --chart-3: oklch(0.62 0.17 148);
   --chart-4: oklch(0.78 0.16 75);
   --chart-5: oklch(0.68 0.20 350);
 
-  /* Legacy tokens neutralized to subtle blue tint */
-  --gradient-brand: var(--brand);
-  --gradient-warm: var(--brand);
-  --shadow-glow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-glow-cyan: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.12), 0 4px 10px -4px rgba(15, 23, 42, 0.06);
+  --shadow-glow: var(--shadow-sm);
+  --shadow-glow-cyan: var(--shadow-sm);
+  --gradient-brand: linear-gradient(135deg, var(--brand), var(--brand-2));
+  --gradient-warm: linear-gradient(135deg, var(--brand), var(--navy));
 }
 
 @layer base {
@@ -114,19 +142,20 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
     font-weight: 600;
     color: var(--color-foreground);
   }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 25%, transparent);
+  }
 }
 
-/* Legacy utility overrides — kept so existing components stay on-brand
-   without touching every file. All resolve to clean, minimal styling. */
+/* ============================================================
+   Utilities
+   ============================================================ */
 
 @utility text-gradient {
   background: linear-gradient(135deg, var(--brand), var(--brand-2));
@@ -137,45 +166,101 @@
 }
 
 @utility text-gradient-warm {
-  background: linear-gradient(135deg, var(--amber), var(--pink));
+  background: linear-gradient(135deg, var(--brand), var(--navy));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
-/* Filled blue feature card — white text, deep blue background,
-   subtle gradient sheen and hover elevation. */
+/* Section background layers to create rhythm:
+   White → Light Gray → White → Very Soft Blue */
+@utility section-surface {
+  background: var(--surface);
+}
+@utility section-muted {
+  background: var(--background);
+}
+@utility section-tint {
+  background: var(--tint);
+}
+
+/* Elevated white card — replaces the old blue "card-vibrant".
+   Every existing `.card-vibrant` in the app now becomes a premium
+   white card: 12px radius, thin border, subtle shadow, hover lift.
+   Text tokens stay on the default foreground palette. */
 @utility card-vibrant {
-  background: linear-gradient(135deg, oklch(0.42 0.20 265), oklch(0.34 0.18 268));
-  color: #ffffff;
-  border: 1px solid oklch(0.34 0.18 268);
-  border-radius: var(--radius);
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 10px 30px -18px oklch(0.42 0.20 265 / 0.55);
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem; /* 12px */
+  box-shadow: var(--shadow-sm);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
-    background 0.2s ease;
-
-  & h1, & h2, & h3, & h4, & h5, & h6 { color: #ffffff; }
-  & p, & span, & div { color: inherit; }
-  & .text-muted-foreground { color: rgba(255, 255, 255, 0.75) !important; }
+    border-color 0.2s ease;
 
   &:hover {
-    box-shadow:
-      0 4px 8px rgba(15, 23, 42, 0.08),
-      0 20px 40px -18px oklch(0.42 0.20 265 / 0.7);
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in oklab, var(--brand) 25%, var(--border));
+    transform: translateY(-1px);
   }
 }
 
-@utility animate-gradient {
-  animation: none;
+/* Deep navy panel — used for premium headers (hero, project header). */
+@utility panel-navy {
+  background:
+    radial-gradient(1200px 400px at 10% -20%, rgba(37, 99, 235, 0.35), transparent 60%),
+    radial-gradient(900px 380px at 90% 10%, rgba(37, 99, 235, 0.18), transparent 60%),
+    linear-gradient(135deg, var(--navy), var(--charcoal));
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-lg);
+
+  & h1, & h2, & h3, & h4 { color: #ffffff; }
+  & .text-muted-foreground { color: rgba(255, 255, 255, 0.72) !important; }
+  & .text-foreground { color: #ffffff !important; }
 }
 
-@utility animate-pulse-glow {
-  animation: none;
-  opacity: 0;
+/* Subtle blue tinted panel — for softer highlighted headers. */
+@utility panel-tint {
+  background: linear-gradient(135deg, var(--tint), var(--surface));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Interactive row / list item */
+@utility row-hover {
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  &:hover { background: var(--tint); }
+}
+
+@utility animate-gradient { animation: none; }
+@utility animate-pulse-glow { animation: none; opacity: 0; }
+
+/* Hero animations */
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(2%, -1%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+}
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+}
+@utility animate-gradient-shift {
+  animation: gradient-shift 9s ease-in-out infinite;
+}
+@utility animate-aurora {
+  animation: aurora-drift 18s ease-in-out infinite;
+  transform-origin: center;
+}
+@utility animate-fade-up {
+  animation: fade-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 

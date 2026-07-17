@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   FolderKanban,
@@ -20,9 +20,11 @@ import {
   logout,
   getCurrentUser,
   listProjects,
+  listProjectTasks,
   createProject,
   getApiError,
   type Project,
+  type Task,
 } from "@/lib/api";
 
 export const Route = createFileRoute("/dashboard")({
@@ -84,13 +86,32 @@ function DashboardShell() {
   }
 
   const projects = projectsQ.data ?? [];
-  const user = userQ.data as { username?: string; email?: string; fullName?: string } | undefined;
+  const user = userQ.data as
+    { _id?: string; username?: string; email?: string; fullName?: string } | undefined;
+  const taskQueries = useQueries({
+    queries: projects.map((project) => ({
+      queryKey: ["tasks", project._id],
+      queryFn: () => listProjectTasks(project._id),
+      enabled: Boolean(user?._id),
+      retry: false,
+    })),
+  });
+  const assignedTasks = projects.flatMap((project, index) =>
+    (taskQueries[index]?.data ?? [])
+      .filter((task) => {
+        const assigneeId =
+          typeof task.assignedTo === "object" ? task.assignedTo?._id : task.assignedTo;
+        return assigneeId === user?._id;
+      })
+      .map((task) => ({ project, task })),
+  );
 
   return (
     <div className="min-h-screen">
       <DashboardNav user={user} onSignOut={handleSignOut} />
       <main className="mx-auto max-w-7xl px-6 pt-24 pb-16">
         <WelcomeHeader user={user} projects={projects} />
+        <AssignedTasksSection assignments={assignedTasks} />
         <div className="mt-10">
           <ProjectsSection
             projects={projects}
@@ -100,6 +121,41 @@ function DashboardShell() {
         </div>
       </main>
     </div>
+  );
+}
+
+function AssignedTasksSection({
+  assignments,
+}: {
+  assignments: { project: Project; task: Task }[];
+}) {
+  if (assignments.length === 0) return null;
+
+  return (
+    <section className="mt-8 rounded-2xl border border-[var(--cyan)]/40 bg-[var(--cyan)]/5 p-5">
+      <div className="flex items-center gap-2">
+        <ClipboardList className="h-4 w-4 text-[var(--cyan)]" />
+        <h2 className="font-display text-base font-semibold">Assigned to you</h2>
+        <span className="rounded-full bg-[var(--cyan)]/15 px-2 py-0.5 text-[11px] font-medium text-[var(--cyan)]">
+          {assignments.length}
+        </span>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {assignments.map(({ project, task }) => (
+          <Link
+            key={task._id}
+            to="/projects/$projectId"
+            params={{ projectId: project._id }}
+            className="rounded-xl border border-[var(--cyan)]/30 bg-card/80 px-3 py-2.5 transition-colors hover:bg-muted"
+          >
+            <div className="text-sm font-medium">{task.title}</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {project.name} · {task.status.replace("_", " ")}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -190,14 +246,7 @@ function StatsBar({ total }: { total: number }) {
       value: total,
       icon: FolderKanban,
       tint: "from-[var(--brand)] to-[var(--brand-2)]",
-    },
-    { label: "Roles", value: 3, icon: Users, tint: "from-[var(--brand-2)] to-[var(--cyan)]" },
-    {
-      label: "Statuses",
-      value: 3,
-      icon: ClipboardList,
-      tint: "from-[var(--cyan)] to-[var(--amber)]",
-    },
+    },     
   ];
   return (
     <div className="flex flex-wrap gap-3">
