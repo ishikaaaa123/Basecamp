@@ -1,48 +1,86 @@
-// backend/src/utils/mailgen.js
-const { Resend } = require("resend");
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Keep the SAME exported function name your auth controller already imports.
-// If your controller imports it differently, just rename the export accordingly.
-const sendVerificationEmail = async (toEmail, verificationUrl) => {
+/**
+ * Send an email via Resend.
+ * Signature kept compatible with the old nodemailer version.
+ */
+export const sendEmail = async (options) => {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not set");
-    }
+    const { email, subject, mailgenContent } = options;
 
-    const from = process.env.MAIL_FROM || "onboarding@resend.dev";
-
-    const { data, error } = await resend.emails.send({
-      from,                       // e.g. "MyApp <no-reply@yourdomain.com>"
-      to: [toEmail],
-      subject: "Verify your email",
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:20px">
-          <h2>Verify your email</h2>
-          <p>Click the button below to verify your email address:</p>
-          <p>
-            <a href="${verificationUrl}"
-               style="background:#2563eb;color:#fff;padding:10px 18px;
-                      border-radius:6px;text-decoration:none">
-              Verify Email
-            </a>
-          </p>
-          <p>Or open this link:<br/>${verificationUrl}</p>
-        </div>
-      `,
+    // mailgenContent is now just { html, text } (see helpers below)
+    await resend.emails.send({
+      from: process.env.MAIL_FROM, // e.g. "MyApp <onboarding@resend.dev>"
+      to: email,
+      subject,
+      html: mailgenContent.html,
+      text: mailgenContent.text,
     });
-
-    if (error) {
-      console.error("error occured!! email service failed", error);
-      throw new Error(error.message || "email service failed");
-    }
-
-    return data;
-  } catch (err) {
-    console.error("error occured!! email service failed", err.message);
-    throw err;
+  } catch (error) {
+    console.log("error occured!! email service failed", error.message);
+    throw new Error("email service failed");
   }
 };
 
-module.exports = { sendVerificationEmail };
+/**
+ * Content for the "verify your email" email.
+ * Returns { html, text } that sendEmail() will use.
+ */
+export const emailVerifyMailgenContent = (username, verificationUrl) => {
+  return {
+    text: `Hi ${username},
+
+Welcome! Please verify your email by opening this link:
+${verificationUrl}
+
+If you did not create an account, you can ignore this email.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Welcome, ${username} 👋</h2>
+        <p>Please verify your email address to activate your account.</p>
+        <p>
+          <a href="${verificationUrl}"
+             style="display:inline-block;padding:10px 18px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;">
+            Verify Email
+          </a>
+        </p>
+        <p>Or copy this link into your browser:<br/>
+          <a href="${verificationUrl}">${verificationUrl}</a>
+        </p>
+        <p style="color:#666;font-size:12px;">If you did not create an account, you can ignore this email.</p>
+      </div>
+    `,
+  };
+};
+
+/**
+ * Content for the "forgot password" email.
+ */
+export const forgotPasswordMailgenContent = (username, passwordResetUrl) => {
+  return {
+    text: `Hi ${username},
+
+We received a request to reset your password. Open this link to set a new one:
+${passwordResetUrl}
+
+If you did not request this, you can safely ignore this email.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Hi ${username},</h2>
+        <p>We received a request to reset your password.</p>
+        <p>
+          <a href="${passwordResetUrl}"
+             style="display:inline-block;padding:10px 18px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;">
+            Reset Password
+          </a>
+        </p>
+        <p>Or copy this link into your browser:<br/>
+          <a href="${passwordResetUrl}">${passwordResetUrl}</a>
+        </p>
+        <p style="color:#666;font-size:12px;">If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  };
+};
