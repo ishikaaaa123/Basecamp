@@ -8,8 +8,8 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// CORS config: allow the frontend dev-server origins listed in CORS_ORIGIN.
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+// CORS config: explicitly allow the deployed frontend origin(s) listed in CORS_ORIGIN.
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);

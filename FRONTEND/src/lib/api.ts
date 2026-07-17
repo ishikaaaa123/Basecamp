@@ -1,13 +1,14 @@
 import axios from "axios";
 
 /**
- * Set VITE_API_BASE_URL when embedding this frontend in another project.
- * It must include the backend API prefix, if your backend uses one.
+ * This is intentionally required. Vite embeds VITE_* values at build time, so
+ * every deployed frontend must be built with its public backend API URL.
  */
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1").replace(
-  /\/$/,
-  "",
-);
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+if (!configuredApiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL must be set before building or running the frontend.");
+}
+const BASE_URL = configuredApiBaseUrl.replace(/\/$/, "");
 const TOKEN_KEY = "pc_access_token";
 
 // Keep every browser-to-backend request in one Axios client so the API origin,

@@ -279,7 +279,7 @@ const forgotPassword = asyncHandler(async(req,res)=>{
         email: user?.email,
         subject:"Please reset your password ji",
         mailgenContent : forgotPassowrdMailgenContent(user.username,`${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unHashedToken}`),
-    })                                                              //http              localhost                          
+    })
 
     return res.status(200).json(
         new ApiResponse(200,{},"Password reset email has been sent successfully!!")
@@ -333,7 +333,6 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 })
 
 export {resetForgotPassword,changeCurrentPassword,forgotPassword,registerUser, resendEmailVerification,login, logout,currentUser, verifyEmail,refreshAccessToken};
-
 
 
 

@@ -14,7 +14,7 @@ console.log("Calling connectDB...");
 connectDB()
         .then(()=>{
           app.listen(port, () => {
-            console.log(`Example app listening on port http://localhost:${port}`)
+            console.log(`API server listening on port ${port}`)
           })
         })
         .catch((err) =>{

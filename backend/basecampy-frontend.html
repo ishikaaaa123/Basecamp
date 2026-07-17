@@ -516,7 +516,7 @@
 /* =========================================================
    CONFIG
    ========================================================= */
-const API_BASE = (window.__BASECAMPY_API__ || "http://localhost:3000") + "/api/v1";
+const API_BASE = window.__BASECAMPY_API__ || `${window.location.origin}/api/v1`;
 
 /* =========================================================
    STATE

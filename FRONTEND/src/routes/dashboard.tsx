@@ -226,7 +226,7 @@ function WelcomeHeader({
           Workspace
         </div>
         <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-          Welcome back, <span className="text-gradient">{name}</span>
+          Welcome, <span className="text-gradient">{name}</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {projects.length === 0
