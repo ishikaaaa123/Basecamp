@@ -285,7 +285,7 @@ export function Hero() {
               href="/register"
               className="group inline-flex items-center gap-2 rounded-lg bg-[color:var(--brand)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_40px_-10px_rgba(59,130,246,0.7)] ring-1 ring-white/10 transition-all hover:bg-blue-500 hover:shadow-[0_14px_50px_-8px_rgba(59,130,246,0.85)] hover:-translate-y-0.5"
             >
-              Get started free
+              Get started for free
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
